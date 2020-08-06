@@ -1,5 +1,5 @@
 import { DocumentClient } from "aws-sdk/clients/dynamodb";
-import { batchGetItems } from "./query";
+import { batchGetItems } from "./batchGetItems";
 
 /**
  * Checks if the given keys of items exists in DB or not

@@ -14,8 +14,6 @@ import { putItem } from "./mutation/putItem";
 import { transactPutItems } from "./mutation/transactPutItems";
 
 class DynamoHelper {
-  dynamoHelper: jest.Mock<any, any>;
-  [x: string]: jest.Mock<any, any>;
   dbClient: DocumentClient;
   tableName: string;
   tableIndexes: Record<
@@ -94,7 +92,7 @@ class DynamoHelper {
     return batchDeleteItems(this.dbClient, this.tableName, keys);
   }
 
-  putItem<T extends AnyObject>(
+  async putItem<T extends AnyObject>(
     item: T
   ): Promise<PromiseResult<DocumentClient.PutItemOutput, AWSError>> {
     return putItem(this.dbClient, this.tableName, item);

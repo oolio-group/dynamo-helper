@@ -1,11 +1,17 @@
 {
-  "extends": "../../tsconfig.build.json",
-
   "compilerOptions": {
-    "declaration": true,
-    "outDir": "./dist",
-    "rootDir": "./lib"
+    "module": "commonjs",
+    "target": "ES2019",
+    "sourceMap": true,
+    "outDir": "dist",
+    "esModuleInterop": true,
+    "moduleResolution": "node",
+    "emitDecoratorMetadata": true,
+    "experimentalDecorators": true,
+    "resolveJsonModule": true,
+    "jsx": "react",
+    "skipLibCheck": true
   },
 
-  "include": ["lib/**/*"]
+  "exclude": ["node_modules", "dist"]
 }

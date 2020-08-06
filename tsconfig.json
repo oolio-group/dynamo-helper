@@ -1,17 +1,9 @@
 {
-  "compilerOptions": {
-    "module": "commonjs",
-    "target": "ES2019",
-    "sourceMap": true,
-    "outDir": "dist",
-    "esModuleInterop": true,
-    "moduleResolution": "node",
-    "emitDecoratorMetadata": true,
-    "experimentalDecorators": true,
-    "resolveJsonModule": true,
-    "jsx": "react",
-    "skipLibCheck": true
-  },
+  "extends": "./tsconfig.build.json",
 
-  "exclude": ["node_modules", "dist"]
+  "compilerOptions": {
+    "baseUrl": ".",
+    "esModuleInterop": true,
+    "resolveJsonModule": true
+  }
 }

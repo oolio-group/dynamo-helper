@@ -1,8 +1,6 @@
-import { BatchWriteItemInput, DocumentClient } from "aws-sdk/clients/dynamodb";
 import { fill } from "lodash";
-import DynamoHelper, * as client from "..";
-import { batchDeleteItems } from "./batchDeleteItems";
-import { batchPutItems } from "./batchPutItems";
+import DynamoHelper from "../index";
+import { BatchWriteItemInput } from "aws-sdk/clients/dynamodb";
 
 describe("batchDeleteItems", () => {
   const tableName = "tillpos-development";
@@ -12,14 +10,12 @@ describe("batchDeleteItems", () => {
     tableIndexes: {},
   });
 
-  const dbClientSpy = jest.spyOn(dynamoHelper, "dbClient");
-
   beforeEach(() => {
-    dbClientSpy.mockReturnValue(({
-      batchWrite: jest.fn().mockReturnValue({
-        promise: jest.fn().mockResolvedValue({}),
+    dynamoHelper.dbClient.batchWrite = jest.fn().mockReturnValue({
+      promise: jest.fn().mockImplementation(async () => {
+        return Promise.resolve({});
       }),
-    } as unknown) as DocumentClient);
+    });
   });
 
   test("exports function", () => {
@@ -27,11 +23,9 @@ describe("batchDeleteItems", () => {
   });
 
   test("promise rejection", async () => {
-    clientSpy.mockReturnValue(({
-      batchWrite: jest.fn().mockReturnValue({
-        promise: jest.fn().mockRejectedValue([]),
-      }),
-    } as unknown) as DocumentClient);
+    dynamoHelper.dbClient.batchWrite = jest.fn().mockReturnValue({
+      promise: jest.fn().mockRejectedValue([]),
+    });
     await expect(dynamoHelper.batchDeleteItems([{}, {}])).rejects.toStrictEqual(
       []
     );
