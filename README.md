@@ -4,9 +4,9 @@ Library package that exports several methods for helping with DynamoDB operation
 
 ## Usage
 
-### Create dbhelper client
+### Create DynamoHelper instance
 
-Use the constructor to create the dynamohelper client
+Use the constructor to create the dynamohelper instance
 
 ```typescript
 
@@ -92,20 +92,6 @@ const queryInput = buildQueryTableParams<ProductModel>({
 });
 ```
 
-### getClient
-
-Returns an initialized DynamoDB Document client instance. If called for the first time initializes a new client based on config from `@hitz-group/config`
-
-```typescript
-import { getClient } from '@hitz-group/dynamo-helper';
-
-// initializes new client
-const client = getClient();
-
-// returns same client
-getClient();
-```
-
 ### query
 
 Perform a query operation in DynamoDB. Input parameter `Filter` can be customized with various operations
@@ -116,7 +102,7 @@ See type `Filter` for supported operations
 import { query } from '@hitz-group/dynamo-helper';
 
 // Get all inactive product id's in organization
-const products = await query<ProductModel>({
+const products = await dynamoHelper.query<ProductModel>({
   where: {
     pk: 'org_uuid',
     sk: {
@@ -149,7 +135,7 @@ Fetch an item using pk and sk combination. Returns item if found or returns null
 import { getItem } from '@hitz-group/dynamo-helper';
 
 // Get a single product matching the key
-const product = await getItem<ProductModel>('org_uuid', 'product_xxx');
+const product = await dynamoHelper.getItem<ProductModel>('org_uuid', 'product_xxx');
 ```
 
 ### batchGetItems
@@ -160,7 +146,7 @@ Fetch many items using pk and sk combination
 import { batchGetItems } from '@hitz-group/dynamo-helper';
 
 // Get all products matching the keys
-const products = await batchGetItems<ProductModel>([
+const products = await dynamoHelper.batchGetItems<ProductModel>([
   { pk: 'x', sk: '1' },
   { pk: 'y', sk: '2' },
 ]);
@@ -174,7 +160,7 @@ Check if an item exists in the database with the keys provided. Returns a boolea
 import { exists } from '@hitz-group/dynamo-helper';
 
 // Check if product already exists
-if (await exists('x', 1)) {
+if (await dynamoHelper.exists('x', 1)) {
   console.log('exists');
 }
 ```
@@ -186,7 +172,7 @@ Create a new item or replace an existing item in the database
 ```typescript
 import { putItem } from '@hitz-group/dynamo-helper';
 
-await putItem({
+await dynamoHelper.putItem({
   pk: 'x',
   sk: '1',
   name: 'Product A',
@@ -201,7 +187,7 @@ Remove an item from database matching the key provided if it exists
 import { deleteItem } from '@hitz-group/dynamo-helper';
 
 // delete product
-await deleteItem('x', '1'});
+await dynamoHelper.deleteItem('x', '1'});
 ```
 
 ### transactPutItems
@@ -214,7 +200,7 @@ This is useful when multiple entries needs to be created or replaced for an API 
 import { transactPutItems } from '@hitz-group/dynamo-helper';
 
 // initiate a transaction
-await transactPutItems([
+await dynamoHelper.transactPutItems([
   {
     pk: 'product_1',
     sk: 'product_1',
@@ -243,7 +229,7 @@ Create or replace multiple items in the database at the same time. This method w
 import { batchPutItems } from '@hitz-group/dynamo-helper';
 
 // create multiple items
-await batchPutItems([
+await dynamoHelper.batchPutItems([
   {
     pk: 'product_1',
     sk: 'product_1',
@@ -272,7 +258,7 @@ Delete multiple items in the database at the same time. This method will chunk y
 import { batchDeleteItems } from '@hitz-group/dynamo-helper';
 
 // delete multiple items
-await batchDeleteItems([
+await dynamoHelper.batchDeleteItems([
   {
     pk: 'product_1',
     sk: 'product_1',
@@ -295,7 +281,7 @@ Checks if keys provided exists in database or not. Returns empty list if all ite
 ```typescript
 import { batchExists } from '@hitz-group/dynamo-helper';
 
-const result = await batchExists([
+const result = await dynamoHelper.batchExists([
   {
     pk: 'product_1',
     sk: 'product_1',
