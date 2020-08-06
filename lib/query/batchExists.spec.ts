@@ -1,7 +1,6 @@
 import { BatchGetItemInput, DocumentClient } from "aws-sdk/clients/dynamodb";
 import range from "lodash/range";
 import DynamoHelper from "../index";
-import { batchExists } from "./batchExists";
 
 describe("batchExists", () => {
   const tableName = "tillpos-development";

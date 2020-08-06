@@ -13,8 +13,8 @@ export function putItem<T extends AnyObject>(
   tableName: string,
   item: T
 ): Promise<PromiseResult<DocumentClient.PutItemOutput, AWSError>> {
-  if (item === null) {
-    throw new Error("Expected on argument of type object received null");
+  if (item === null || item === undefined) {
+    throw new Error(`Expected on argument of type object received ${item}`);
   } else if (typeof item !== "object") {
     throw new Error(
       `Expected on argument of type object received ${typeof item}`
