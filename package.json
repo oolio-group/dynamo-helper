@@ -1,0 +1,28 @@
+{
+  "name": "@hitz-group/dynamo-helper",
+  "version": "0.0.1",
+  "main": "dist/index",
+  "types": "dist",
+  "files": [
+    "dist"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "ssh://github.com/hitz-group/tillx.git"
+  },
+  "scripts": {
+    "build": "yarn  clean && yarn  compile",
+    "build:watch": "yarn compile -- -w",
+    "clean": "rm -rf ./dist && rm -rf tsconfig.build.tsbuildinfo",
+    "compile": "tsc -p ./tsconfig.build.json"
+  },
+  "dependencies": {
+    "aws-sdk": "2.725.0",
+    "lodash": "4.17.19",
+    "uuid": "8.3.0"
+  },
+  "devDependencies": {
+    "typescript": "3.9.7",
+    "@types/jest": "^26.0.8"
+  }
+}

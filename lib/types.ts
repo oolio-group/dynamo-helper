@@ -1,0 +1,161 @@
+import { DynamoDB } from 'aws-sdk';
+
+/**
+ * Objects with open properties
+ */
+export interface AnyObject {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  [property: string]: any;
+}
+
+export type QueryInput = DynamoDB.DocumentClient.QueryInput;
+
+/**
+ * DynamoDB supported operators
+ */
+export type DynamoDBOperators =
+  | '='
+  | '>'
+  | '>='
+  | '<'
+  | '<='
+  | '<>'
+  | 'BETWEEN'
+  | 'BEGINS_WITH'
+  | 'IN'
+  | 'CONTAINS';
+
+/**
+ * Operators for where clauses
+ */
+export type FilterOperators =
+  | 'eq'
+  | 'neq'
+  | 'gt'
+  | 'gte'
+  | 'lt'
+  | 'lte'
+  | 'inq'
+  | 'between'
+  | 'like'
+  | 'beginsWith';
+/**
+ * Matching predicate comparison
+ */
+export type PredicateComparison<PT> = {
+  eq?: PT;
+  neq?: PT;
+  gt?: PT;
+  gte?: PT;
+  lt?: PT;
+  lte?: PT;
+  inq?: PT[];
+  nin?: PT[];
+  between?: [PT, PT];
+  exists?: boolean;
+  like?: PT;
+  nlike?: PT;
+  ilike?: PT;
+  nilike?: PT;
+  beginsWith?: PT;
+};
+/**
+ * Value types for `{propertyName: value}`
+ */
+export type ShortHandEqualType = string | number | boolean | Date;
+/**
+ * Key types of a given model, excluding operators
+ */
+export type KeyOf<MT extends object> = Exclude<
+  Extract<keyof MT, string>,
+  FilterOperators
+>;
+/**
+ * Condition clause
+ *
+ * @example
+ * ```ts
+ * {
+ *   name: {inq: ['John', 'Mary']},
+ *   status: 'ACTIVE',
+ *   age: {gte: 40}
+ * }
+ * ```
+ */
+export type Condition<MT extends object> = {
+  [P in KeyOf<MT>]?: PredicateComparison<MT[P]> | (MT[P] & ShortHandEqualType);
+};
+/**
+ * Where clause
+ *
+ * @example
+ * ```ts
+ * {
+ *   name: {inq: ['John', 'Mary']},
+ *   status: 'ACTIVE'
+ *   and: [...],
+ *   or: [...],
+ * }
+ * ```
+ */
+export type Where<MT extends object = AnyObject> =
+  | Condition<MT>
+  | AndClause<MT>
+  | OrClause<MT>;
+/**
+ * And clause
+ *
+ * @example
+ * ```ts
+ * {
+ *   and: [...],
+ * }
+ * ```
+ */
+export interface AndClause<MT extends object> {
+  and: Where<MT>[];
+}
+/**
+ * Or clause
+ *
+ * @example
+ * ```ts
+ * {
+ *   or: [...],
+ * }
+ * ```
+ */
+export interface OrClause<MT extends object> {
+  or: Where<MT>[];
+}
+
+/**
+ * Order by direction
+ */
+export type Direction = 'ASC' | 'DESC';
+
+/**
+ * Selection of fields
+ *
+ * Example:
+ * fields: ['id', 'isActive]
+ */
+export type Fields<MT = AnyObject> = Array<keyof MT>;
+
+/**
+ * Query filter object
+ */
+export interface Filter<MT extends object = AnyObject> {
+  /**
+   * The matching criteria
+   */
+  where?: Where<MT>;
+  /**
+   * To include/exclude fields
+   */
+  fields?: Fields<MT>;
+  /**
+   * Maximum number of entities
+   */
+  limit?: number;
+}
