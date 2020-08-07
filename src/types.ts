@@ -159,3 +159,15 @@ export interface Filter<MT extends object = AnyObject> {
    */
   limit?: number;
 }
+
+export interface TableConfig {
+  name: string;
+  /**
+   * A record of table index and it's key names
+   * Required on query and get operations dealing with indexes
+   * A default index is always required]
+   * eg: indexes: { default: { partitionKeyName: 'pk', sortKeyName: 'sk' } }
+   */
+  indexes: Record<string, { partitionKeyName: string; sortKeyName: string }>;
+}
+
