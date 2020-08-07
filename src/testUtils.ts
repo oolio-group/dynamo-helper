@@ -19,6 +19,7 @@ export const testClient = {
   get: jest.fn().mockReturnThis(),
   put: jest.fn().mockReturnThis(),
   write: jest.fn().mockReturnThis(),
+  delete: jest.fn().mockReturnThis(),
   batchGet: jest.fn().mockReturnThis(),
   batchWrite: jest.fn().mockReturnThis(),
   transactWrite: jest.fn().mockReturnThis(),

@@ -1,64 +1,62 @@
-import { fill } from "lodash";
-import DynamoHelper from "../index";
-import { BatchWriteItemInput } from "aws-sdk/clients/dynamodb";
+import { BatchWriteItemInput } from 'aws-sdk/clients/dynamodb';
+import { fill } from 'lodash';
+import { testClient, testTableConf } from '../testUtils';
+import { batchDeleteItems as batchDeleteItemsMethod } from './batchDeleteItems';
 
-describe("batchDeleteItems", () => {
-  const tableName = "tillpos-development";
-  const dynamoHelper = new DynamoHelper({
-    region: "ap-south-1",
-    tableName,
-    tableIndexes: {},
-  });
+describe('batchDeleteItems', () => {
+  const batchDeleteItems = batchDeleteItemsMethod.bind(
+    null,
+    testClient,
+    testTableConf,
+  );
+  const spy = jest.spyOn(testClient, 'batchWrite');
 
   beforeEach(() => {
-    dynamoHelper.dbClient.batchWrite = jest.fn().mockReturnValue({
-      promise: jest.fn().mockImplementation(async () => {
-        return Promise.resolve({});
-      }),
+    spy.mockClear();
+    spy.mockReturnValue({
+      promise: jest.fn().mockResolvedValue({}),
     });
   });
 
-  test("exports function", () => {
-    expect(typeof dynamoHelper.batchDeleteItems).toBe("function");
+  test('exports function', () => {
+    expect(typeof batchDeleteItems).toBe('function');
   });
 
-  test("promise rejection", async () => {
-    dynamoHelper.dbClient.batchWrite = jest.fn().mockReturnValue({
+  test('promise rejection', async () => {
+    spy.mockReturnValue({
       promise: jest.fn().mockRejectedValue([]),
     });
-    await expect(dynamoHelper.batchDeleteItems([{}, {}])).rejects.toStrictEqual(
-      []
-    );
+    await expect(batchDeleteItems([{}, {}])).rejects.toStrictEqual([]);
   });
 
-  test("chunks items to bits of 25 items", async () => {
-    await dynamoHelper.batchDeleteItems([{}, {}]);
-    expect(dynamoHelper.dbClient.batchWrite).toHaveBeenCalledTimes(1);
+  test('chunks items to bits of 25 items', async () => {
+    await batchDeleteItems([{}, {}]);
+    expect(spy).toHaveBeenCalledTimes(1);
 
-    await dynamoHelper.batchDeleteItems(fill(Array(50), {}));
-    expect(dynamoHelper.dbClient.batchWrite).toHaveBeenCalledTimes(3);
+    await batchDeleteItems(fill(Array(50), {}));
+    expect(spy).toHaveBeenCalledTimes(3);
 
-    await dynamoHelper.batchDeleteItems(fill(Array(201), {}));
-    expect(dynamoHelper.dbClient.batchWrite).toHaveBeenCalledTimes(12);
+    await batchDeleteItems(fill(Array(201), {}));
+    expect(spy).toHaveBeenCalledTimes(12);
   });
 
-  test("uses batchWrite correctly", async () => {
-    await dynamoHelper.batchDeleteItems([
-      { pk: "x", sk: "1" },
-      { pk: "y", sk: "2" },
+  test('uses batchWrite correctly', async () => {
+    await batchDeleteItems([
+      { pk: 'x', sk: '1' },
+      { pk: 'y', sk: '2' },
     ]);
 
-    expect(dynamoHelper.dbClient.batchWrite).toHaveBeenCalledWith({
+    expect(spy).toHaveBeenCalledWith({
       RequestItems: {
-        [tableName]: [
+        [testTableConf.name]: [
           {
             DeleteRequest: {
-              Key: { pk: "x", sk: "1" },
+              Key: { pk: 'x', sk: '1' },
             },
           },
           {
             DeleteRequest: {
-              Key: { pk: "y", sk: "2" },
+              Key: { pk: 'y', sk: '2' },
             },
           },
         ],

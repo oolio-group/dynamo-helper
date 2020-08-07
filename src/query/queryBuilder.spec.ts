@@ -1,5 +1,13 @@
 import { buildQueryTableParams } from './queryBuilder';
 
+type ProductModel = {
+  pk: string;
+  sk: string;
+  id: string;
+  isActive: boolean;
+  barcode?: string;
+}
+
 const sampleCases = [
   {
     name: 'sk operations: between',

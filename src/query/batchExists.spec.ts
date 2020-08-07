@@ -1,80 +1,82 @@
-import { BatchGetItemInput, DocumentClient } from "aws-sdk/clients/dynamodb";
-import range from "lodash/range";
-import DynamoHelper from "../index";
+import { BatchGetItemInput } from 'aws-sdk/clients/dynamodb';
+import range from 'lodash/range';
+import { testClient, testTableConf } from '../testUtils';
+import { batchExists as batchExistsMethod } from './batchExists';
 
-describe("batchExists", () => {
-  const tableName = "tillpos-development";
-  const dynamoHelper = new DynamoHelper({
-    region: "ap-south-1",
-    tableName,
-    tableIndexes: {},
+describe('batchExists', () => {
+  const batchExists = batchExistsMethod.bind(null, testClient, testTableConf);
+  const spy = jest.spyOn(testClient, 'batchGet');
+
+  beforeEach(() => {
+    spy.mockClear();
+    spy.mockImplementation((params: BatchGetItemInput) => {
+      return {
+        promise: jest.fn().mockResolvedValue({
+          Responses: {
+            [testTableConf.name]: params.RequestItems[testTableConf.name].Keys,
+          },
+        }),
+      };
+    });
   });
 
   beforeEach(() => {
-    dynamoHelper.dbClient.batchGet = jest
-      .fn()
-      .mockImplementation((params: BatchGetItemInput) => {
-        return {
-          promise: jest.fn().mockResolvedValue({
-            Responses: {
-              [tableName]: params.RequestItems[tableName].Keys,
-            },
-          }),
-        };
-      });
+    spy.mockImplementation((params: BatchGetItemInput) => {
+      return {
+        promise: jest.fn().mockResolvedValue({
+          Responses: {
+            [testTableConf.name]: params.RequestItems[testTableConf.name].Keys,
+          },
+        }),
+      };
+    });
   });
-  test("returns empty if all keys exist", async () => {
+  test('returns empty if all keys exist', async () => {
     await expect(
-      dynamoHelper.batchExists([
-        { pk: "1", sk: "2" },
-        { pk: "3", sk: "4" },
-      ])
+      batchExists([
+        { pk: '1', sk: '2' },
+        { pk: '3', sk: '4' },
+      ]),
     ).resolves.toHaveLength(0);
   });
 
-  test("returns not found keys if not all items exist", async () => {
-    dynamoHelper.dbClient.batchGet = jest
-      .fn()
-      .mockImplementation((params: BatchGetItemInput) => {
-        const keys = params.RequestItems[tableName].Keys;
-        return {
-          promise: jest.fn().mockResolvedValue({
-            Responses: {
-              [tableName]: keys.slice(0, 1),
-            },
-          }),
-        };
-      });
+  test('returns not found keys if not all items exist', async () => {
+    spy.mockImplementation((params: BatchGetItemInput) => {
+      const keys = params.RequestItems[testTableConf.name].Keys;
+      return {
+        promise: jest.fn().mockResolvedValue({
+          Responses: {
+            [testTableConf.name]: keys.slice(0, 1),
+          },
+        }),
+      };
+    });
 
     await expect(
-      dynamoHelper.batchExists([
-        { pk: "1", sk: "2" },
-        { pk: "3", sk: "4" },
-      ])
-    ).resolves.toEqual([{ pk: "3", sk: "4" }]);
+      batchExists([
+        { pk: '1', sk: '2' },
+        { pk: '3', sk: '4' },
+      ]),
+    ).resolves.toEqual([{ pk: '3', sk: '4' }]);
   });
 
-  test("with 100 items", async () => {
-    dynamoHelper.dbClient.batchGet = jest
-      .fn()
-      .mockImplementation((params: BatchGetItemInput) => {
-        const keys = params.RequestItems[tableName].Keys;
-        return {
-          promise: jest.fn().mockResolvedValue({
-            Responses: {
-              [tableName]: keys.slice(0, Math.floor(keys.length / 2)),
-            },
-          }),
-        };
-      });
+  test('with 100 items', async () => {
+    spy.mockImplementation((params: BatchGetItemInput) => {
+      const keys = params.RequestItems[testTableConf.name].Keys;
+      return {
+        promise: jest.fn().mockResolvedValue({
+          Responses: {
+            [testTableConf.name]: keys.slice(0, Math.floor(keys.length / 2)),
+          },
+        }),
+      };
+    });
 
     const keys = range(100).map((i: string) => ({
-      pk: i + "pk",
-      sk: i + "sk",
+      pk: i + 'pk',
+      sk: i + 'sk',
     }));
 
-    await expect(dynamoHelper.batchExists(keys)).resolves.toEqual(
-      keys.slice(50)
-    );
+    await expect(batchExists(keys)).resolves.toEqual(keys.slice(50));
   });
 });

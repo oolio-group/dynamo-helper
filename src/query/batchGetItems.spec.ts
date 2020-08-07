@@ -1,117 +1,105 @@
-import DynamoHelper from "..";
-import { BatchGetItemInput, DocumentClient } from "aws-sdk/clients/dynamodb";
-import { batchGetItems } from "./batchGetItems";
-import { fill } from "lodash";
+import { BatchGetItemInput } from 'aws-sdk/clients/dynamodb';
+import { fill } from 'lodash';
+import { testClient, testTableConf } from '../testUtils';
+import { batchGetItems as batchGetItemsMethod } from './batchGetItems';
 
-describe("batchGetItems", () => {
-  const tableName = "tillpos-development";
-  const dynamoHelper = new DynamoHelper({
-    region: "ap-south-1",
-    tableName,
-    tableIndexes: {},
-  });
+describe('batchGetItems', () => {
+  const batchGetItems = batchGetItemsMethod.bind(
+    null,
+    testClient,
+    testTableConf,
+  );
+  const spy = jest.spyOn(testClient, 'batchGet');
 
   beforeEach(() => {
-    dynamoHelper.dbClient.batchGet = jest
-      .fn()
-      .mockImplementation((params: BatchGetItemInput) => {
-        return {
-          promise: jest.fn().mockResolvedValue({
-            Responses: {
-              [tableName]: [],
-            },
-          }),
-        };
-      });
+    spy.mockClear();
+    spy.mockReturnValue({
+      promise: jest.fn().mockResolvedValue({
+        Responses: {
+          [testTableConf.name]: [],
+        },
+      }),
+    });
   });
 
-  test("exports exists function", () => {
-    expect(typeof dynamoHelper.batchGetItems).toBe("function");
-  });
-
-  test("returns list of matching items", async () => {
-    await expect(dynamoHelper.batchGetItems([])).resolves.toHaveLength(0);
-    dynamoHelper.dbClient.batchGet = jest
-      .fn()
-      .mockImplementation((params: BatchGetItemInput) => {
-        return {
-          promise: jest.fn().mockResolvedValue({
-            Responses: {
-              [tableName]: [{ id: "xxxx" }],
-            },
-          }),
-        };
-      });
+  test('returns list of matching items', async () => {
+    await expect(batchGetItems([])).resolves.toHaveLength(0);
+    spy.mockImplementation((params: BatchGetItemInput) => {
+      return {
+        promise: jest.fn().mockResolvedValue({
+          Responses: {
+            [testTableConf.name]: [{ id: 'xxxx' }],
+          },
+        }),
+      };
+    });
     await expect(
-      dynamoHelper.batchGetItems([{ pk: "xxxx", sk: "yyyy" }])
+      batchGetItems([{ pk: 'xxxx', sk: 'yyyy' }]),
     ).resolves.toHaveLength(1);
   });
 
-  test("returns empty if no result found", async () => {
-    await expect(dynamoHelper.batchGetItems([])).resolves.toHaveLength(0);
+  test('returns empty if no result found', async () => {
+    await expect(batchGetItems([])).resolves.toHaveLength(0);
 
     await expect(
-      dynamoHelper.batchGetItems([{ pk: "xxxx", sk: "yyyy" }])
+      batchGetItems([{ pk: 'xxxx', sk: 'yyyy' }]),
     ).resolves.toHaveLength(0);
   });
 
-  test("chunks requests into 100s", async () => {
-    dynamoHelper.dbClient.batchGet = jest
-      .fn()
-      .mockImplementation((params: BatchGetItemInput) => {
-        return {
-          promise: jest.fn().mockResolvedValue({
-            Responses: {
-              [tableName]: params.RequestItems[tableName].Keys,
-            },
-          }),
-        };
-      });
+  test('chunks requests into 100s', async () => {
+    spy.mockImplementation((params: BatchGetItemInput) => {
+      return {
+        promise: jest.fn().mockResolvedValue({
+          Responses: {
+            [testTableConf.name]: params.RequestItems[testTableConf.name].Keys,
+          },
+        }),
+      };
+    });
 
-    await expect(dynamoHelper.batchGetItems([{}, {}]));
-    expect(dynamoHelper.dbClient.batchGet).toHaveBeenCalledTimes(1);
-    await expect(dynamoHelper.batchGetItems(fill(Array(100), {})));
-    expect(dynamoHelper.dbClient.batchGet).toHaveBeenCalledTimes(2);
-    const results = await dynamoHelper.batchGetItems(fill(Array(301), {}));
-    expect(dynamoHelper.dbClient.batchGet).toHaveBeenCalledTimes(6);
+    await expect(batchGetItems([{}, {}]));
+    expect(spy).toHaveBeenCalledTimes(1);
+    await expect(batchGetItems(fill(Array(100), {})));
+    expect(spy).toHaveBeenCalledTimes(2);
+    const results = await batchGetItems(fill(Array(301), {}));
+    expect(spy).toHaveBeenCalledTimes(6);
     expect(results).toHaveLength(301);
   });
 
-  test("returns all matches if pagination is not enabled", async () => {
-    dynamoHelper.dbClient.batchGet = jest
-      .fn()
-      .mockImplementation((params: BatchGetItemInput) => {
-        const isFirstRequest =
-          params.RequestItems[tableName].Keys[0].pk === "xxxx";
-        return {
-          promise: jest.fn().mockResolvedValue({
-            Responses: {
-              [tableName]: [isFirstRequest ? { id: "xxxx" } : { id: "yyyy" }],
+  test('returns all matches if pagination is not enabled', async () => {
+    spy.mockImplementation((params: BatchGetItemInput) => {
+      const isFirstRequest =
+        params.RequestItems[testTableConf.name].Keys[0].pk === 'xxxx';
+      return {
+        promise: jest.fn().mockResolvedValue({
+          Responses: {
+            [testTableConf.name]: [
+              isFirstRequest ? { id: 'xxxx' } : { id: 'yyyy' },
+            ],
+          },
+          UnprocessedKeys: {
+            [testTableConf.name]: {
+              Keys: isFirstRequest ? [{ pk: 'aaaa', sk: 'bbbb' }] : [],
             },
-            UnprocessedKeys: {
-              [tableName]: {
-                Keys: isFirstRequest ? [{ pk: "aaaa", sk: "bbbb" }] : [],
-              },
-            },
-          }),
-        };
-      });
+          },
+        }),
+      };
+    });
 
-    await dynamoHelper.batchGetItems([
-      { pk: "xxxx", sk: "yyyy" },
-      { pk: "aaaa", sk: "bbbb" },
+    await batchGetItems([
+      { pk: 'xxxx', sk: 'yyyy' },
+      { pk: 'aaaa', sk: 'bbbb' },
     ]);
-    expect(dynamoHelper.dbClient.batchGet).toHaveBeenCalledTimes(2);
+    expect(spy).toHaveBeenCalledTimes(2);
   });
 
-  test("fields to project", async () => {
-    const dbClient = dynamoHelper.dbClient;
-    await dynamoHelper.batchGetItems([{ pk: "xxxx", sk: "yyyy" }], ["id"]);
-    expect(dbClient.batchGet).toHaveBeenCalledWith({
+  test('fields to project', async () => {
+    await batchGetItems([{ pk: 'xxxx', sk: 'yyyy' }], ['id']);
+    expect(spy).toHaveBeenCalledWith({
       RequestItems: {
-        [tableName]: {
-          Keys: [{ pk: "xxxx", sk: "yyyy" }],
-          ProjectionExpression: "id",
+        [testTableConf.name]: {
+          Keys: [{ pk: 'xxxx', sk: 'yyyy' }],
+          ProjectionExpression: 'id',
         },
       },
     });

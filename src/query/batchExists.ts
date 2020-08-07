@@ -1,5 +1,6 @@
-import { DocumentClient } from "aws-sdk/clients/dynamodb";
-import { batchGetItems } from "./batchGetItems";
+import { DocumentClient } from 'aws-sdk/clients/dynamodb';
+import { TableConfig } from '../types';
+import { batchGetItems } from './batchGetItems';
 
 /**
  * Checks if the given keys of items exists in DB or not
@@ -8,15 +9,19 @@ import { batchGetItems } from "./batchGetItems";
  */
 export async function batchExists(
   dbClient: DocumentClient,
-  tableName: string,
-  keys: Array<DocumentClient.Key>
+  table: TableConfig,
+  keys: Array<DocumentClient.Key>,
 ): Promise<Array<DocumentClient.Key>> {
-  const result = await batchGetItems(dbClient, tableName, keys, ["pk", "sk"]);
+  const index = table.indexes.default;
+  const result = await batchGetItems(dbClient, table, keys, [
+    index.partitionKeyName,
+    index.sortKeyName,
+  ]);
 
   if (result.length !== keys.length) {
-    const foundItemsKeyMap = result.map((x) => Object.values(x).join(":+:"));
+    const foundItemsKeyMap = result.map(x => Object.values(x).join(':+:'));
     const notFoundItems = keys.filter(
-      (x) => !foundItemsKeyMap.includes(Object.values(x).join(":+:"))
+      x => !foundItemsKeyMap.includes(Object.values(x).join(':+:')),
     );
     return notFoundItems;
   }

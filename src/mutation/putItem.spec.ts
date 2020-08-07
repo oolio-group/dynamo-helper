@@ -1,58 +1,50 @@
-import { PutItemInput } from "aws-sdk/clients/dynamodb";
-import DynamoHelper from "../index";
+import { PutItemInput } from 'aws-sdk/clients/dynamodb';
+import { testClient, testTableConf } from '../testUtils';
+import { putItem as putItemMethod } from './putItem';
 
-describe("putItem", () => {
-  const tableName = "tillpos-development";
-  const dynamoHelper = new DynamoHelper({
-    region: "ap-south-1",
-    tableName,
-    tableIndexes: {},
-  });
+describe('putItem', () => {
+  const putItem = putItemMethod.bind(null, testClient, testTableConf);
+  const spy = jest.spyOn(testClient, 'put');
 
   beforeEach(() => {
-    dynamoHelper.dbClient.put = jest.fn().mockReturnValue({
-      promise: jest.fn().mockImplementation(async () => {
-        return Promise.resolve({});
-      }),
+    spy.mockReturnValue({
+      promise: jest.fn().mockResolvedValue({}),
     });
   });
 
-  test("exports function", () => {
-    expect(typeof dynamoHelper.putItem).toBe("function");
-  });
-
-  test("validates input", () => {
-    expect(dynamoHelper.putItem(undefined)).rejects.toThrowError(
-      "Expected on argument of type object received undefined"
+  test('validates input', async () => {
+    await expect(putItem(undefined)).rejects.toThrowError(
+      'Expected on argument of type object received undefined',
     );
-    expect(dynamoHelper.putItem("" as never)).rejects.toThrowError(
-      "Expected on argument of type object received string"
+    await expect(putItem('' as never)).rejects.toThrowError(
+      'Expected on argument of type object received string',
     );
-    expect(dynamoHelper.putItem(2 as never)).rejects.toThrowError(
-      "Expected on argument of type object received number"
+    await expect(putItem(2 as never)).rejects.toThrowError(
+      'Expected on argument of type object received number',
     );
-    expect(dynamoHelper.putItem(null)).rejects.toThrowError(
-      "Expected on argument of type object received null"
+    await expect(putItem(null)).rejects.toThrowError(
+      'Expected on argument of type object received null',
     );
-    expect(dynamoHelper.putItem(NaN as never)).rejects.toThrowError(
-      "Expected on argument of type object received number"
+    await expect(putItem(NaN as never)).rejects.toThrowError(
+      'Expected on argument of type object received number',
     );
   });
 
-  test("uses put to write item to db", async () => {
-    await dynamoHelper.putItem({ pk: "xxxx", sk: "yyyy", id: "xxxx" });
-    expect(dynamoHelper.dbClient.put).toHaveBeenCalledWith({
-      Item: { pk: "xxxx", sk: "yyyy", id: "xxxx" },
-      TableName: tableName,
+  test('uses put to write item to db', async () => {
+    await putItem({ pk: 'xxxx', sk: 'yyyy', id: 'xxxx' });
+    expect(spy).toHaveBeenCalledWith({
+      Item: { pk: 'xxxx', sk: 'yyyy', id: 'xxxx' },
+      TableName: testTableConf.name,
     } as PutItemInput);
   });
 
-  test("promise rejection", async () => {
-    dynamoHelper.dbClient.put = jest.fn().mockReturnValue({
-      promise: jest.fn().mockRejectedValue([]),
+  test('promise rejection', async () => {
+    spy.mockReturnValue({
+      promise: jest.fn().mockRejectedValue({}),
     });
+
     await expect(
-      dynamoHelper.putItem({ pk: "xxxx", sk: "yyyy", id: "xxxx" })
+      putItem({ pk: 'xxxx', sk: 'yyyy', id: 'xxxx' }),
     ).rejects.toStrictEqual({});
   });
 });

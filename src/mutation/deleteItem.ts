@@ -1,24 +1,27 @@
-import { DocumentClient } from "aws-sdk/clients/dynamodb";
-import { PromiseResult } from "aws-sdk/lib/request";
-import { AWSError } from "aws-sdk";
+import { AWSError } from 'aws-sdk';
+import { DocumentClient } from 'aws-sdk/clients/dynamodb';
+import { PromiseResult } from 'aws-sdk/lib/request';
+import { TableConfig } from '../types';
 
 /**
  * Delete item matching specified key
  * @param pk partition key value
  * @param sk sort key value
  */
-export function deleteItem(
+export async function deleteItem(
   dbClient: DocumentClient,
-  tableName: string,
+  table: TableConfig,
   pk: string,
-  sk: string
+  sk: string,
 ): Promise<PromiseResult<DocumentClient.DeleteItemOutput, AWSError>> {
+  const index = table.indexes.default;
+
   return dbClient
     .delete({
-      TableName: tableName,
+      TableName: table.name,
       Key: {
-        pk,
-        sk,
+        [index.partitionKeyName]: pk,
+        [index.sortKeyName]: sk,
       },
     })
     .promise();

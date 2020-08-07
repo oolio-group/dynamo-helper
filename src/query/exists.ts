@@ -1,5 +1,6 @@
 import { DocumentClient } from "aws-sdk/clients/dynamodb";
 import { getItem } from "./getItem";
+import { TableConfig } from "../types";
 
 /**
  * Checks if an item with a given pk sk combo exists in DB or not
@@ -9,14 +10,10 @@ import { getItem } from "./getItem";
  */
 export async function exists(
   dbClient: DocumentClient,
-  tableName: string,
-  tableIndexes: Record<
-    string,
-    { partitionKeyName: string; sortKeyName: string }
-  >,
+  table: TableConfig,
   pk: string,
   sk: string
 ): Promise<boolean> {
-  const item = await getItem(dbClient, tableName, pk, sk, ["id"]);
+  const item = await getItem(dbClient, table, pk, sk, ["id"]);
   return item ? true : false;
 }

@@ -1,7 +1,7 @@
-import { AnyObject } from "../types";
-import { DocumentClient, TransactWriteItem } from "aws-sdk/clients/dynamodb";
-import { PromiseResult } from "aws-sdk/lib/request";
-import { AWSError } from "aws-sdk";
+import { AWSError } from 'aws-sdk';
+import { DocumentClient, TransactWriteItem } from 'aws-sdk/clients/dynamodb';
+import { PromiseResult } from 'aws-sdk/lib/request';
+import { AnyObject, TableConfig } from '../types';
 
 /**
  * Put multiple items in the DB as a transaction
@@ -10,14 +10,14 @@ import { AWSError } from "aws-sdk";
  */
 export function transactPutItems(
   dbClient: DocumentClient,
-  tableName: string,
-  items: Array<AnyObject>
+  table: TableConfig,
+  items: Array<AnyObject>,
 ): Promise<PromiseResult<DocumentClient.TransactWriteItemsOutput, AWSError>> {
   return dbClient
     .transactWrite({
-      TransactItems: items.map<TransactWriteItem>((x) => ({
+      TransactItems: items.map<TransactWriteItem>(x => ({
         Put: {
-          TableName: tableName,
+          TableName: table.name,
           Item: x,
         },
       })),

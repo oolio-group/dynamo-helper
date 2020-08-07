@@ -1,4 +1,4 @@
-import { AnyObject } from "../types";
+import { AnyObject, TableConfig } from "../types";
 import { DocumentClient } from "aws-sdk/clients/dynamodb";
 import { PromiseResult } from "aws-sdk/lib/request";
 import { AWSError } from "aws-sdk";
@@ -8,9 +8,9 @@ import { AWSError } from "aws-sdk";
  * If provided keys already exists then it is replaced
  * @param item object to put
  */
-export function putItem<T extends AnyObject>(
+export async function putItem<T extends AnyObject>(
   dbClient: DocumentClient,
-  tableName: string,
+  table: TableConfig,
   item: T
 ): Promise<PromiseResult<DocumentClient.PutItemOutput, AWSError>> {
   if (item === null || item === undefined) {
@@ -24,7 +24,7 @@ export function putItem<T extends AnyObject>(
   return dbClient
     .put({
       Item: item,
-      TableName: tableName,
+      TableName: table.name,
     })
     .promise();
 }
