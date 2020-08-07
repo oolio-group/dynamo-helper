@@ -1,45 +1,36 @@
-import { DocumentClient } from 'aws-sdk/clients/dynamodb';
-import { AnyObject, Filter, TableConfig } from './types';
-import { batchExists } from './query/batchExists';
-import { query } from './query/query';
-import { getItem } from './query/getItem';
-import { batchGetItems } from './query/batchGetItems';
-import { exists } from './query/exists';
 import { AWSError } from 'aws-sdk';
+import {
+  BatchWriteItemOutput,
+  DeleteItemOutput,
+  DocumentClient,
+  Key,
+  PutItemOutput,
+  TransactWriteItemsOutput,
+} from 'aws-sdk/clients/dynamodb';
 import { PromiseResult } from 'aws-sdk/lib/request';
 import { batchDeleteItems } from './mutation/batchDeleteItems';
 import { batchPutItems } from './mutation/batchPutItems';
 import { deleteItem } from './mutation/deleteItem';
 import { putItem } from './mutation/putItem';
 import { transactPutItems } from './mutation/transactPutItems';
-
-export interface DynamoHelperOptions {
-  /**
-   * AWS Region
-   */
-  region?: string;
-  /**
-   * DynamoDB Endpoint, use to connect to local db
-   */
-  endpoint?: string;
-  /**
-   * Table options
-   */
-  table: TableConfig;
-}
+import { batchExists } from './query/batchExists';
+import { batchGetItems } from './query/batchGetItems';
+import { exists } from './query/exists';
+import { getItem } from './query/getItem';
+import { query } from './query/query';
+import { AnyObject, Filter, TableConfig } from './types';
 
 export class DynamoHelper {
-  dbClient: DocumentClient;
   table: TableConfig;
+  dbClient: DocumentClient;
 
   /**
    * Create a DynamoHelper object
-   * @param {string} param.tableName - The name of your DynamoDB table
-   * @param {string} param.region - The name of the region where the table is present
-   * @param {string} param.tableIndexes - The table indexes available
-   * @param {string} param.endpoint - The endpoint of the table
+   * @param {string} region - The name of the region where the table is present
+   * @param {string} table - The table name and indexes available
+   * @param {string} endpoint - The endpoint of the database
    */
-  constructor({ region, table, endpoint }: DynamoHelperOptions) {
+  constructor(table: TableConfig, region?: string, endpoint?: string) {
     this.dbClient = new DocumentClient({
       region,
       endpoint,
@@ -51,12 +42,7 @@ export class DynamoHelper {
     filter: Filter<T>,
     indexName?: string,
   ): Promise<Array<T>> {
-    return query(
-      this.dbClient,
-      this.table,
-      filter,
-      indexName,
-    );
+    return query(this.dbClient, this.table, filter, indexName);
   }
 
   async getItem<T extends AnyObject>(
@@ -78,44 +64,38 @@ export class DynamoHelper {
     return exists(this.dbClient, this.table, pk, sk);
   }
 
-  async batchExists(
-    keys: Array<DocumentClient.Key>,
-  ): Promise<Array<DocumentClient.Key>> {
+  async batchExists(keys: Array<Key>): Promise<Array<Key>> {
     return batchExists(this.dbClient, this.table, keys);
   }
 
   async deleteItem(
     pk: string,
     sk: string,
-  ): Promise<PromiseResult<DocumentClient.DeleteItemOutput, AWSError>> {
+  ): Promise<PromiseResult<DeleteItemOutput, AWSError>> {
     return deleteItem(this.dbClient, this.table, pk, sk);
   }
 
   async batchDeleteItems(
-    keys: Array<DocumentClient.Key>,
-  ): Promise<
-    Array<PromiseResult<DocumentClient.BatchWriteItemOutput, AWSError>>
-  > {
+    keys: Array<Key>,
+  ): Promise<Array<PromiseResult<BatchWriteItemOutput, AWSError>>> {
     return batchDeleteItems(this.dbClient, this.table, keys);
   }
 
   async putItem<T extends AnyObject>(
     item: T,
-  ): Promise<PromiseResult<DocumentClient.PutItemOutput, AWSError>> {
+  ): Promise<PromiseResult<PutItemOutput, AWSError>> {
     return putItem(this.dbClient, this.table, item);
   }
 
   async batchPutItems(
     items: Array<AnyObject>,
-  ): Promise<
-    Array<PromiseResult<DocumentClient.BatchWriteItemOutput, AWSError>>
-  > {
+  ): Promise<Array<PromiseResult<BatchWriteItemOutput, AWSError>>> {
     return batchPutItems(this.dbClient, this.table, items);
   }
 
   async transactPutItems(
     items: Array<AnyObject>,
-  ): Promise<PromiseResult<DocumentClient.TransactWriteItemsOutput, AWSError>> {
+  ): Promise<PromiseResult<TransactWriteItemsOutput, AWSError>> {
     return transactPutItems(this.dbClient, this.table, items);
   }
 }
