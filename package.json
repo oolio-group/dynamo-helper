@@ -28,7 +28,7 @@
     "build:watch": "yarn compile -- -w",
     "clean": "rm -rf ./dist && rm -rf tsconfig.build.tsbuildinfo",
     "compile": "tsc -p ./tsconfig.build.json",
-    "test": "yarn run build && jest"
+    "test": "jest"
   },
   "dependencies": {
     "aws-sdk": "2.728.0",

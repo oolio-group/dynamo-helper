@@ -1,0 +1,34 @@
+name: Unit Tests and ESLint
+
+on:
+  pull_request:
+    branches:
+      - "*"
+  push:
+    branches:
+      - master
+
+jobs:
+  tests:
+    name: Test And Code coverage
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Skip NO CI
+        if: contains( github.event.head_commit.message, '***NO_CI***')
+        run: exit 78
+      - uses: actions/checkout@v1
+      - name: Install Node Dependencies
+        run: yarn install
+      - name: Build packages
+        run: yarn build
+        env:
+          CI: "TRUE"
+      - name: Test project
+        run: yarn  test
+        env:
+          CI: "TRUE"
+      - name: Code Coverage
+        run: bash <(curl -s https://codecov.io/bash)
+        env:
+          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
