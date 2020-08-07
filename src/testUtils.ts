@@ -23,4 +23,4 @@ export const testClient = {
   batchWrite: jest.fn().mockReturnThis(),
   transactWrite: jest.fn().mockReturnThis(),
   promise: jest.fn(),
-};
+} as any;

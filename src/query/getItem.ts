@@ -1,5 +1,5 @@
 import { DocumentClient } from "aws-sdk/clients/dynamodb";
-import { AnyObject } from "../types";
+import { AnyObject, TableConfig } from "../types";
 
 /**
  * Get item by partition key and sort key
@@ -10,7 +10,7 @@ import { AnyObject } from "../types";
  */
 export async function getItem<T extends AnyObject>(
   dbClient: DocumentClient,
-  tableName: string,
+  table: TableConfig,
   pk: string,
   sk: string,
   fields?: Array<keyof T>
@@ -23,12 +23,14 @@ export async function getItem<T extends AnyObject>(
     throw new Error("Expected both arguments to have length greater than 0");
   }
 
+  const index = table.indexes.default;
+
   const params: DocumentClient.GetItemInput = {
     Key: {
-      pk,
-      sk,
+      [index.partitionKeyName]: pk,
+      [index.sortKeyName]: sk,
     },
-    TableName: tableName,
+    TableName: table.name,
   };
 
   if (fields && fields.length) {
