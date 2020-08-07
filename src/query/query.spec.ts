@@ -1,107 +1,93 @@
-import DynamoHelper from "..";
-import { Where } from "../types";
-import { QueryOutput, QueryInput } from "aws-sdk/clients/dynamodb";
+import { QueryInput, QueryOutput } from 'aws-sdk/clients/dynamodb';
+import { testClient, testTableConf } from '../testUtils';
+import { Where } from '../types';
+import { query as queryMethod } from './query';
 
-describe("query", () => {
-  const tableName = "tillpos-development";
-  const dynamoHelper = new DynamoHelper({
-    region: "ap-south-1",
-    tableName,
-    tableIndexes: {},
+describe('query', () => {
+  const query = queryMethod.bind(null, testClient, testTableConf);
+
+  jest.spyOn(testClient, 'query').mockReturnValue({
+    promise: jest.fn().mockResolvedValue({ Items: [] }),
   });
 
-  beforeEach(() => {
-    dynamoHelper.dbClient.query = jest.fn().mockImplementation(() => {
-      return {
-        promise: jest.fn().mockResolvedValue({ Items: [] }),
-      };
-    });
-  });
-
-  test("exports method", () => {
-    expect(typeof dynamoHelper.query).toBe("function");
-  });
-
-  test("generates valid query table params", () => {
-    dynamoHelper.query({
+  test('with only partition key', async () => {
+    await query({
       where: {
-        pk: "xxxx",
+        pk: 'xxxx',
       },
     });
 
-    expect(dynamoHelper.dbClient.query).toHaveBeenCalledWith({
-      TableName: tableName,
-      KeyConditionExpression: "#PK = :pk",
+    expect(testClient.query).toHaveBeenCalledWith({
+      TableName: testTableConf.name,
+      KeyConditionExpression: '#PK = :pk',
       ExpressionAttributeNames: {
-        "#PK": "pk",
+        '#PK': 'pk',
       },
       ExpressionAttributeValues: {
-        ":pk": "xxxx",
+        ':pk': 'xxxx',
       },
     });
   });
 
-  test("throws error on invalid input", async () => {
+  test('input validation', async () => {
     await expect(
-      dynamoHelper.query({
+      query({
         where: {
           pk: {
-            beginsWith: "product",
+            beginsWith: 'product',
           },
         } as Where<any>,
-      })
-    ).rejects.toThrowError("Partition key condition can only be a string");
+      }),
+    ).rejects.toThrowError('Partition key condition can only be a string');
   });
 
-  test("returns list of items, empty if no result", async () => {
-    const results = await dynamoHelper.query({
+  test('when there are no results, returns empty', async () => {
+    const results = await query({
       where: {
-        pk: "xxxx",
+        pk: 'xxxx',
       },
     });
 
     expect(results.length).toBe(0);
   });
 
-  test("uses provided index name to query", () => {
-    dynamoHelper.query(
+  test('with index name specified', () => {
+    query(
       {
         where: {
-          sk: "xxxx",
+          sk: 'xxxx',
         },
       },
-      "reverse"
+      'reverse',
     );
 
-    expect(dynamoHelper.dbClient.query).toHaveBeenCalledWith({
-      TableName: tableName,
-      IndexName: "reverse",
-      KeyConditionExpression: "#SK = :sk",
+    expect(testClient.query).toHaveBeenCalledWith({
+      TableName: testTableConf.name,
+      IndexName: 'reverse',
+      KeyConditionExpression: '#SK = :sk',
       ExpressionAttributeNames: {
-        "#SK": "sk",
+        '#SK': 'sk',
       },
       ExpressionAttributeValues: {
-        ":sk": "xxxx",
+        ':sk': 'xxxx',
       },
     });
   });
 
-  test("returns all matches if pagination is not enabled", async () => {
-    dynamoHelper.dbClient.query = jest
-      .fn()
-      .mockImplementation((params: QueryInput) => {
-        const isFirstRequest = params.ExclusiveStartKey === undefined;
-        return {
-          promise: jest.fn().mockResolvedValue({
-            Items: [isFirstRequest ? { id: "xxxx" } : { id: "yyyy" }],
-            LastEvaluatedKey: isFirstRequest ? { pk: "xxxx" } : undefined,
-          } as QueryOutput),
-        };
-      });
-
-    await dynamoHelper.query({
-      where: { pk: "xxxx" },
+  test('result if pagination is not enabled has all items', async () => {
+    testClient.query = jest.fn().mockImplementation((params: QueryInput) => {
+      const isFirstRequest = params.ExclusiveStartKey === undefined;
+      return {
+        promise: jest.fn().mockResolvedValue({
+          Items: [isFirstRequest ? { id: 'xxxx' } : { id: 'yyyy' }],
+          LastEvaluatedKey: isFirstRequest ? { pk: 'xxxx' } : undefined,
+        } as QueryOutput),
+      };
     });
-    expect(dynamoHelper.dbClient.query).toHaveBeenCalledTimes(2);
+
+    await query({
+      where: { pk: 'xxxx' },
+    });
+    expect(testClient.query).toHaveBeenCalledTimes(2);
   });
 });

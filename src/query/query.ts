@@ -1,6 +1,6 @@
-import { DocumentClient } from "aws-sdk/clients/dynamodb";
-import { buildQueryTableParams } from "./queryBuilder";
-import { AnyObject, Filter, QueryInput } from "../types";
+import { DocumentClient } from 'aws-sdk/clients/dynamodb';
+import { AnyObject, Filter, TableConfig } from '../types';
+import { buildQueryTableParams } from './queryBuilder';
 
 /**
  * Queries DynamoDB and returns list of matching items
@@ -9,19 +9,16 @@ import { AnyObject, Filter, QueryInput } from "../types";
  */
 export async function query<T extends AnyObject>(
   dbClient: DocumentClient,
-  tableName: string,
-  tableIndexes: Record<
-    string,
-    { partitionKeyName: string; sortKeyName: string }
-  >,
+  table: TableConfig,
   filter: Filter<T>,
-  indexName?: string
+  indexName?: string,
 ): Promise<Array<T>> {
-  const index = tableIndexes[indexName || "default"];
-  const params: QueryInput = {
-    ...buildQueryTableParams(filter, index.partitionKeyName, index.sortKeyName),
-    TableName: tableName,
-  };
+  const { partitionKeyName, sortKeyName } = table.indexes[
+    indexName || 'default'
+  ];
+  const params = buildQueryTableParams(filter, partitionKeyName, sortKeyName);
+
+  params.TableName = table.name;
 
   if (indexName) {
     params.IndexName = indexName;
