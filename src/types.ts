@@ -160,6 +160,8 @@ export interface Filter<MT extends object = AnyObject> {
   limit?: number;
 }
 
+type TableIndex = { partitionKeyName: string; sortKeyName: string };
+
 export interface TableConfig {
   name: string;
   /**
@@ -168,6 +170,5 @@ export interface TableConfig {
    * A default index is always required]
    * eg: indexes: { default: { partitionKeyName: 'pk', sortKeyName: 'sk' } }
    */
-  indexes: Record<string, { partitionKeyName: string; sortKeyName: string }>;
+  indexes: { default: TableIndex } & Record<string, TableIndex>;
 }
-
