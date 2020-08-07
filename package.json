@@ -1,38 +1,46 @@
 {
   "name": "@hitz-group/dynamo-helper",
-  "version": "0.0.1",
-  "main": "dist/index",
-  "types": "dist",
-  "files": [
-    "dist"
+  "keywords": [
+    "dynamodb",
+    "aws",
+    "dynamo"
   ],
+  "version": "0.0.1",
+  "files": [
+    "lib",
+    "LICENSE",
+    "README.md"
+  ],
+  "main": "lib/index",
+  "types": "dist",
   "repository": {
     "type": "git",
-    "url": "ssh://github.com/hitz-group/tillx.git"
+    "url": "http://github.com/hitz-group/dynamo-helper.git"
   },
+  "bugs": "https://github.com/hitz-group/dynamo-helper/issues",
+  "license": "MIT",
+  "contributors": [
+    "Shidil Eringa <shidil@live.com>",
+    "Snehit Velma <snehithvelma@gmail.com>"
+  ],
   "scripts": {
     "build": "yarn  clean && yarn  compile",
     "build:watch": "yarn compile -- -w",
-    "build:test": "tsc -p ./tsconfig.build.json",
     "clean": "rm -rf ./dist && rm -rf tsconfig.build.tsbuildinfo",
     "compile": "tsc -p ./tsconfig.build.json",
-    "test": "yarn run build:test && yarn run test:only",
-    "test:only": "jest"
+    "test": "yarn run build && jest"
   },
-  "license": "MIT",
   "dependencies": {
-    "aws-sdk": "2.725.0",
-    "lodash": "4.17.19",
-    "uuid": "8.3.0"
+    "aws-sdk": "2.728.0",
+    "lodash": "4.17.19"
   },
   "devDependencies": {
-    "@babel/core": "^7.11.1",
-    "@babel/preset-env": "^7.11.0",
-    "@babel/preset-typescript": "^7.10.4",
-    "@types/jest": "^26.0.9",
-    "babel-jest": "^26.2.2",
-    "jest": "^26.2.2",
-    "ts-jest": "^26.1.4",
-    "typescript": "^3.9.7"
+    "@babel/core": "7.11.1",
+    "@babel/preset-env": "7.11.0",
+    "@babel/preset-typescript": "7.10.4",
+    "@types/jest": "26.0.9",
+    "babel-jest": "26.2.2",
+    "jest": "26.2.2",
+    "typescript": "3.9.7"
   }
 }
