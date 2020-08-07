@@ -1,0 +1,16 @@
+coverage:
+  status:
+    project:
+      default:
+        # basic
+        target: auto
+        threshold: 0.1%
+        base: auto
+        flags:
+          - unit
+        paths:
+          - 'src'
+        if_not_found: failure
+        if_ci_failed: error
+        informational: false
+        only_pulls: false

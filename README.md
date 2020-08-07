@@ -2,6 +2,8 @@
 
 Library package that exports several methods for helping with DynamoDB operations. Abstracts most DynamoDB operations and builds query parameters using a unified filter object.
 
+[![codecov](https://codecov.io/gh/hitz-group/dynamo-helper/branch/master/graph/badge.svg?token=WDLQ7IBV6Y)](https://codecov.io/gh/hitz-group/dynamo-helper)
+
 ## Usage
 
 ### Create DynamoHelper instance
