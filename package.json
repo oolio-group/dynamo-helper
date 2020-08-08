@@ -29,7 +29,7 @@
   "scripts": {
     "build": "yarn  clean && yarn  compile",
     "build:watch": "yarn compile -- -w",
-    "clean": "rm -rf ./dist && rm -rf tsconfig.build.tsbuildinfo",
+    "clean": "rm -rf ./lib && rm -rf tsconfig.build.tsbuildinfo",
     "compile": "tsc -p ./tsconfig.build.json",
     "test": "jest"
   },
