@@ -1,9 +1,9 @@
 name: github-publish
 
 on:
-  push
-    # tags:
-    #   - v*
+  push:
+    tags:
+      - v*
 
 jobs:
   github-publish:
