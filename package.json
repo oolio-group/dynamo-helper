@@ -1,5 +1,6 @@
 {
   "name": "@hitz-group/dynamo-helper",
+  "description": "DynamoDB client and query expression builder. Helps with most of the DynamoDB operations and takes care of the hard stuff for you.",
   "keywords": [
     "dynamodb",
     "aws",
