@@ -2,8 +2,8 @@
   "compilerOptions": {
     "module": "commonjs",
     "target": "ES2019",
-    "sourceMap": true,
     "outDir": "lib",
+    "declaration": true,
     "esModuleInterop": true,
     "moduleResolution": "node",
     "emitDecoratorMetadata": true,
