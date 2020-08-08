@@ -3,7 +3,9 @@
   "keywords": [
     "dynamodb",
     "aws",
-    "dynamo"
+    "dynamo",
+    "documentclient",
+    "nosql"
   ],
   "version": "0.0.1",
   "files": [
