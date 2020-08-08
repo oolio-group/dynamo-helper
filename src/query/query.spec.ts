@@ -36,7 +36,7 @@ describe('query', () => {
           pk: {
             beginsWith: 'product',
           },
-        } as Where<any>,
+        } as Where<{ pk: string }>,
       }),
     ).rejects.toThrowError('Partition key condition can only be a string');
   });

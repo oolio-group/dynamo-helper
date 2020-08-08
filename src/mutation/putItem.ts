@@ -1,7 +1,7 @@
-import { AnyObject, TableConfig } from "../types";
-import { DocumentClient } from "aws-sdk/clients/dynamodb";
-import { PromiseResult } from "aws-sdk/lib/request";
-import { AWSError } from "aws-sdk";
+import { AnyObject, TableConfig } from '../types';
+import { DocumentClient } from 'aws-sdk/clients/dynamodb';
+import { PromiseResult } from 'aws-sdk/lib/request';
+import { AWSError } from 'aws-sdk';
 
 /**
  * Writes item in database.
@@ -15,7 +15,7 @@ export async function putItem<T extends AnyObject>(
 ): Promise<PromiseResult<DocumentClient.PutItemOutput, AWSError>> {
   if (item === null || item === undefined) {
     throw new Error(`Expected on argument of type object received ${item}`);
-  } else if (typeof item !== "object") {
+  } else if (typeof item !== 'object') {
     throw new Error(
       `Expected on argument of type object received ${typeof item}`
     );

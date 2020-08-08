@@ -24,4 +24,5 @@ export const testClient = {
   batchWrite: jest.fn().mockReturnThis(),
   transactWrite: jest.fn().mockReturnThis(),
   promise: jest.fn(),
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 } as any;

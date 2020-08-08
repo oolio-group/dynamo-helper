@@ -53,6 +53,7 @@ export class DynamoHelper {
   }
 
   async batchGetItems(
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     keys: Array<{ [name: string]: any }>,
     fields?: Array<string>,
   ): Promise<Array<AnyObject>> {

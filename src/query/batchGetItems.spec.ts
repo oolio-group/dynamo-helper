@@ -24,7 +24,7 @@ describe('batchGetItems', () => {
 
   test('returns list of matching items', async () => {
     await expect(batchGetItems([])).resolves.toHaveLength(0);
-    spy.mockImplementation((params: BatchGetItemInput) => {
+    spy.mockImplementation(() => {
       return {
         promise: jest.fn().mockResolvedValue({
           Responses: {
