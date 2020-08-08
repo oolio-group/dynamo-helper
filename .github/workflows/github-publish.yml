@@ -26,6 +26,6 @@ jobs:
     - name: Configure package.json
       run: |
         export AA="\"publishConfig\": { \"registry\": \"https://npm.pkg.github.com/\" }"
-        sed "/"workspaces"/i $AA," package.json
+        sed "/"dependencies"/i $AA," package.json > package.json
     - name: Publish package
       run: npm publish
