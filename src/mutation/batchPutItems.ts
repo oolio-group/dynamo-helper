@@ -1,7 +1,7 @@
 import { AWSError } from 'aws-sdk';
 import { DocumentClient, WriteRequest } from 'aws-sdk/clients/dynamodb';
 import { PromiseResult } from 'aws-sdk/lib/request';
-import { chunk } from 'lodash';
+import chunk from 'lodash/chunk';
 import { AnyObject, TableConfig } from '../types';
 
 export function batchPutItems(

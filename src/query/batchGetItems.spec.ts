@@ -1,5 +1,5 @@
 import { BatchGetItemInput } from 'aws-sdk/clients/dynamodb';
-import { fill } from 'lodash';
+import fill from 'lodash/fill';
 import { testClient, testTableConf } from '../testUtils';
 import { batchGetItems as batchGetItemsMethod } from './batchGetItems';
 

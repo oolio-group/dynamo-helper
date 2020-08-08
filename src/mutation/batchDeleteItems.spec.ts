@@ -1,5 +1,5 @@
 import { BatchWriteItemInput } from 'aws-sdk/clients/dynamodb';
-import { fill } from 'lodash';
+import fill from 'lodash/fill';
 import { testClient, testTableConf } from '../testUtils';
 import { batchDeleteItems as batchDeleteItemsMethod } from './batchDeleteItems';
 

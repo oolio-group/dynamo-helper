@@ -6,7 +6,7 @@ import {
   WriteRequest,
 } from 'aws-sdk/clients/dynamodb';
 import { PromiseResult } from 'aws-sdk/lib/request';
-import { chunk } from 'lodash';
+import chunk from 'lodash/chunk';
 import { TableConfig } from '../types';
 
 export function batchDeleteItems(
