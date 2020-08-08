@@ -15,7 +15,7 @@
     "README.md"
   ],
   "main": "lib/index",
-  "types": "dist",
+  "types": "lib",
   "repository": {
     "type": "git",
     "url": "http://github.com/hitz-group/dynamo-helper.git"
