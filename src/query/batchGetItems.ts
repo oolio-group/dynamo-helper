@@ -1,7 +1,9 @@
-import { DocumentClient, Key } from 'aws-sdk/clients/dynamodb';
+import { DocumentClient } from 'aws-sdk/clients/dynamodb';
 import chunk from 'lodash/chunk';
+import keyBy from 'lodash/keyBy';
 import flatten from 'lodash/flatten';
 import { AnyObject, TableConfig } from '../types';
+
 /**
  * Get many items from the db matching the provided keys
  * @param keys array of key maps. eg: [{ pk: '1', sk: '2'}]
@@ -10,7 +12,7 @@ import { AnyObject, TableConfig } from '../types';
 export async function batchGetItems(
   dbClient: DocumentClient,
   table: TableConfig,
-  keys: Key[],
+  keys: DocumentClient.Key[],
   fields?: Array<string>,
 ): Promise<Array<AnyObject>> {
   let result: DocumentClient.BatchGetItemOutput;
@@ -26,6 +28,20 @@ export async function batchGetItems(
   }
 
   const items = [];
+  const { partitionKeyName, sortKeyName } = table.indexes.default;
+
+  const fieldsToProject = fields ? [...fields] : undefined;
+
+  // If projection fields is given, add tables primary keys there by default
+  if (fieldsToProject) {
+    if (!fieldsToProject.includes(partitionKeyName)) {
+      fieldsToProject.push(partitionKeyName);
+    }
+
+    if (!fieldsToProject.includes(sortKeyName)) {
+      fieldsToProject.push(sortKeyName);
+    }
+  }
 
   do {
     result = await dbClient
@@ -33,7 +49,9 @@ export async function batchGetItems(
         RequestItems: {
           [table.name]: {
             Keys: unProcessedKeys.length > 0 ? unProcessedKeys : keys,
-            ProjectionExpression: fields ? fields.join(',') : undefined,
+            ProjectionExpression: fieldsToProject
+              ? fieldsToProject.join(',')
+              : undefined,
           },
         },
       })
@@ -46,5 +64,12 @@ export async function batchGetItems(
     items.push(...(result.Responses[table.name] || []));
   } while (unProcessedKeys.length > 0);
 
-  return items;
+  // DynamoDB doesn't return results in any order
+  // To support dataloader pattern, sort result in same order as keys
+  const itemsHash = keyBy(
+    items,
+    x => `${x[partitionKeyName]}::${x[sortKeyName]}`,
+  );
+
+  return keys.map(x => itemsHash[`${x[partitionKeyName]}::${x[sortKeyName]}`]);
 }

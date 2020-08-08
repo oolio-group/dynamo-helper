@@ -13,10 +13,12 @@ export async function batchExists(
   keys: Array<DocumentClient.Key>,
 ): Promise<Array<DocumentClient.Key>> {
   const index = table.indexes.default;
-  const result = await batchGetItems(dbClient, table, keys, [
-    index.partitionKeyName,
-    index.sortKeyName,
-  ]);
+  const result = (
+    await batchGetItems(dbClient, table, keys, [
+      index.partitionKeyName,
+      index.sortKeyName,
+    ])
+  ).filter(x => !!x);
 
   if (result.length !== keys.length) {
     const foundItemsKeyMap = result.map(x => Object.values(x).join(':+:'));
