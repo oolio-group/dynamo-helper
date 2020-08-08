@@ -8,25 +8,68 @@ Library package that exports several methods for helping with DynamoDB operation
 
 ### Create DynamoHelper instance
 
-Use the constructor to create the dynamohelper instance
+Import DynamoHelper
 
 ```typescript
+import { DynamoHelper } from '@hitz-group/dynamo-helper';
 
-const dynamoHelper = new DynamoHelper({ region, tableName, tableIndexes, endpoint = "" })
+const { DynamoHelper} = require('@hitz-group/dynamo-helper');
+
 ```
 
-The types for the props are
+Use constructor to create the DynamoHelper instance
 
 ```typescript
-  tableName: string;
-  tableIndexes: Record<
-    string,
-    { partitionKeyName: string; sortKeyName: string }
-  >;
-  region: string;
-  ```
+// region and endpoint are optional
+const dynamoHelper = new DynamoHelper(tableConf, region, endpoint);
+```
+
+tableConf should be of type TableConfig
+
+```typescript
+type TableIndex = { partitionKeyName: string; sortKeyName: string };
+
+export interface TableConfig {
+  name: string;
+  indexes: { default: TableIndex } & Record<string, TableIndex>;
+}
+```
+
+### Example
+
+```typescript
+import { DynamoHelper } from '@hitz-group/dynamo-helper';
+
+const table = {
+ name: 'my-ddb-table',
+ indexes: {
+   default: {
+     partitionKeyName: 'pk',
+     sortKeyName: 'sk',
+   }
+ }
+};
+const client = new DynamoHelper(table, 'ap-south-1');
+
+await client.getItem('library#books', 'book-123');
+await client.query({
+  where: {
+    pk: 'library#books',
+    publishedAt: {
+      between: [15550000, 15800000]
+    }
+  }
+});
+
+```
 
 ### buildQueryTableParams
+
+```typescript
+import { buildQueryTableParams } from '@hitz-group/dynamo-helper';
+
+const { buildQueryTableParams} = require('@hitz-group/dynamo-helper');
+```
 
 This method generates DynamoDB query input params from given filter object of type `Filter<T>`
 
@@ -305,6 +348,11 @@ if (result.length === 0) {
   console.log(result);
 }
 ```
+
+## TODO
+
+- [ ] Scan operation support
+- [ ] Support tables without sort key
 
 ## Development
 
