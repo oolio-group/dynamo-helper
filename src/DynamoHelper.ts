@@ -3,7 +3,6 @@ import {
   BatchWriteItemOutput,
   DeleteItemOutput,
   DocumentClient,
-  Key,
   PutItemOutput,
   TransactWriteItemsOutput,
 } from 'aws-sdk/clients/dynamodb';
@@ -64,7 +63,9 @@ export class DynamoHelper {
     return exists(this.dbClient, this.table, pk, sk);
   }
 
-  async batchExists(keys: Array<Key>): Promise<Array<Key>> {
+  async batchExists(
+    keys: Array<DocumentClient.Key>,
+  ): Promise<Array<DocumentClient.Key>> {
     return batchExists(this.dbClient, this.table, keys);
   }
 
@@ -76,7 +77,7 @@ export class DynamoHelper {
   }
 
   async batchDeleteItems(
-    keys: Array<Key>,
+    keys: Array<DocumentClient.Key>,
   ): Promise<Array<PromiseResult<BatchWriteItemOutput, AWSError>>> {
     return batchDeleteItems(this.dbClient, this.table, keys);
   }
