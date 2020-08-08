@@ -17,16 +17,13 @@ jobs:
         node-version: "12.x"
         registry-url: "https://npm.pkg.github.com"
         scope: "@hitz-group"
-    # - name: Install Node Dependencies
-    #   run: yarn install
-    # - name: Build packages
-    #   run: yarn build
-    #   env:
-    #     CI: "TRUE"
-    - name: Configure package.json
-      run: |
-        cp package.json package-source.json
-        PATCH="\"publishConfig\": { \"registry\": \"https://npm.pkg.github.com/\" }"
-        sed "/"dependencies"/i $PATCH," package-source.json > package.json
+    - name: Install Node Dependencies
+      run: yarn install
+    - name: Build packages
+      run: yarn build
+      env:
+        CI: "TRUE"
     - name: Publish package
       run: npm publish
+      env:
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
