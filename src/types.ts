@@ -160,7 +160,7 @@ export interface Filter<MT extends object = AnyObject> {
   limit?: number;
 }
 
-type TableIndex = { partitionKeyName: string; sortKeyName: string };
+type TableIndex = { partitionKeyName: string; sortKeyName?: string };
 
 export interface TableConfig {
   name: string;
