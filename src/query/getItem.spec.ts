@@ -9,25 +9,34 @@ describe('getItem', () => {
     jest.clearAllMocks();
   });
 
-  test('validates arguments', async () => {
-    await expect(getItem(undefined, undefined)).rejects.toThrowError(
-      'Expected two arguments of type string, string received undefined, undefined',
+  test('argument validation', async () => {
+    await expect(getItem(undefined)).rejects.toThrowError(
+      'Expected key to be of type object and not empty',
     );
-    await expect(getItem(null, null)).rejects.toThrowError(
-      'Expected two arguments of type string, string received object, object',
+    await expect(getItem(null)).rejects.toThrowError(
+      'Expected key to be of type object and not empty',
     );
-    await expect(getItem('null', null)).rejects.toThrowError(
-      'Expected two arguments of type string, string received string, object',
-    );
-    await expect(getItem(undefined, '')).rejects.toThrowError(
-      'Expected two arguments of type string, string received undefined, string',
+    await expect(getItem('null')).rejects.toThrowError(
+      'Expected key to be of type object and not empty',
     );
     await expect(getItem(2 as never, '')).rejects.toThrowError(
-      'Expected two arguments of type string, string received number, string',
+      'Expected key to be of type object and not empty',
     );
-    await expect(getItem('', '')).rejects.toThrowError(
-      'Expected both arguments to have length greater than 0',
+  });
+
+  test('key validation', async () => {
+    await expect(getItem({ id: 'string' })).rejects.toThrowError(
+      'Invalid key: expected key to contain at least partition key',
     );
+    await expect(getItem({ pk: 'string' })).resolves.not.toThrow();
+    // Custom partition key name in table config
+    await expect(
+      getItemMethod(
+        testClient,
+        { ...testTableConf, indexes: { default: { partitionKeyName: 'id' } } },
+        { id: 'string' },
+      ),
+    ).resolves.not.toThrow();
   });
 
   test('returns null if item not found', async () => {
@@ -37,7 +46,7 @@ describe('getItem', () => {
 
     // No results found, hence empty list.
     // getItem will return null in this case
-    await expect(getItem('xxxx', 'yyyy')).resolves.toBe(null);
+    await expect(getItem({ pk: 'xxxx', sk: 'yyyy' })).resolves.toBe(null);
   });
 
   test('returns first item if found', async () => {
@@ -46,7 +55,7 @@ describe('getItem', () => {
       promise: jest.fn().mockResolvedValue({ Item: { id: 'xxxx' } }),
     });
 
-    await expect(getItem('xxxx', 'yyyy')).resolves.toStrictEqual({
+    await expect(getItem({ pk: 'xxxx', sk: 'yyyy' })).resolves.toStrictEqual({
       id: 'xxxx',
     });
   });
@@ -56,42 +65,12 @@ describe('getItem', () => {
       promise: jest.fn().mockResolvedValue({ Item: { id: 'xxxx' } }),
     });
 
-    await getItem('xxxx', 'yyyy', ['id']);
+    await getItem({ pk: 'xxxx', sk: 'yyyy' }, ['id']);
     expect(testClient.get).toHaveBeenCalledWith({
       TableName: testTableConf.name,
       Key: {
         pk: 'xxxx',
         sk: 'yyyy',
-      },
-      ProjectionExpression: 'id',
-    });
-  });
-
-  test('uses key names from table index configuration', async () => {
-    spy.mockReturnValue({
-      promise: jest.fn().mockResolvedValue({ Item: { id: 'xxxx' } }),
-    });
-
-    await getItemMethod(
-      testClient,
-      {
-        ...testTableConf,
-        indexes: {
-          default: {
-            partitionKeyName: 'key1',
-            sortKeyName: 'key2',
-          },
-        },
-      },
-      'xxxx',
-      'yyyy',
-      ['id'],
-    );
-    expect(testClient.get).toHaveBeenCalledWith({
-      TableName: testTableConf.name,
-      Key: {
-        key1: 'xxxx',
-        key2: 'yyyy',
       },
       ProjectionExpression: 'id',
     });

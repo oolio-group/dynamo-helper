@@ -11,9 +11,8 @@ import { TableConfig } from '../types';
 export async function exists(
   dbClient: DocumentClient,
   table: TableConfig,
-  pk: string,
-  sk: string
+  key: DocumentClient.Key,
 ): Promise<boolean> {
-  const item = await getItem(dbClient, table, pk, sk, ['id']);
+  const item = await getItem(dbClient, table, key, ['id']);
   return item ? true : false;
 }

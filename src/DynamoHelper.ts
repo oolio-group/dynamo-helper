@@ -45,11 +45,10 @@ export class DynamoHelper {
   }
 
   async getItem<T extends AnyObject>(
-    pk: string,
-    sk: string,
+    key: DocumentClient.Key,
     fields?: Array<keyof T>,
   ): Promise<T> {
-    return getItem(this.dbClient, this.table, pk, sk, fields);
+    return getItem(this.dbClient, this.table, key, fields);
   }
 
   async batchGetItems(
@@ -60,8 +59,8 @@ export class DynamoHelper {
     return batchGetItems(this.dbClient, this.table, keys, fields);
   }
 
-  async exists(pk: string, sk: string): Promise<boolean> {
-    return exists(this.dbClient, this.table, pk, sk);
+  async exists(key: DocumentClient.Key): Promise<boolean> {
+    return exists(this.dbClient, this.table, key);
   }
 
   async batchExists(
@@ -71,10 +70,9 @@ export class DynamoHelper {
   }
 
   async deleteItem(
-    pk: string,
-    sk: string,
+    key: DocumentClient.Key,
   ): Promise<PromiseResult<DeleteItemOutput, AWSError>> {
-    return deleteItem(this.dbClient, this.table, pk, sk);
+    return deleteItem(this.dbClient, this.table, key);
   }
 
   async batchDeleteItems(
