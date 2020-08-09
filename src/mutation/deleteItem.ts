@@ -11,18 +11,24 @@ import { TableConfig } from '../types';
 export async function deleteItem(
   dbClient: DocumentClient,
   table: TableConfig,
-  pk: string,
-  sk: string,
+  key: DocumentClient.Key,
 ): Promise<PromiseResult<DocumentClient.DeleteItemOutput, AWSError>> {
   const index = table.indexes.default;
+
+  if (!key || typeof key !== 'object' || Object.keys(key).length === 0) {
+    throw new Error('Expected key to be of type object and not empty');
+  }
+
+  if (!key[index.partitionKeyName]) {
+    throw new Error(
+      'Invalid key: expected key to contain at least partition key',
+    );
+  }
 
   return dbClient
     .delete({
       TableName: table.name,
-      Key: {
-        [index.partitionKeyName]: pk,
-        [index.sortKeyName]: sk,
-      },
+      Key: key,
     })
     .promise();
 }
