@@ -12,35 +12,29 @@ describe('exists', () => {
   });
 
   test('validates arguments', async () => {
-    await expect(exists(undefined, undefined)).rejects.toThrowError(
-      'Expected two arguments of type string, string received undefined, undefined',
+    await expect(exists(undefined)).rejects.toThrowError(
+      'Expected key to be of type object and not empty',
     );
-    await expect(exists(null, null)).rejects.toThrowError(
-      'Expected two arguments of type string, string received object, object',
+    await expect(exists(null)).rejects.toThrowError(
+      'Expected key to be of type object and not empty',
     );
-    await expect(exists('null', null)).rejects.toThrowError(
-      'Expected two arguments of type string, string received string, object',
-    );
-    await expect(exists(undefined, '')).rejects.toThrowError(
-      'Expected two arguments of type string, string received undefined, string',
+    await expect(exists('null')).rejects.toThrowError(
+      'Expected key to be of type object and not empty',
     );
     await expect(exists(2 as never, '')).rejects.toThrowError(
-      'Expected two arguments of type string, string received number, string',
-    );
-    await expect(exists('', '')).rejects.toThrowError(
-      'Expected both arguments to have length greater than 0',
+      'Expected key to be of type object and not empty',
     );
   });
 
   test('returns boolean value', async () => {
     // No results found, hence empty list.
     // getItem will return null in this case
-    await expect(exists('xxxx', 'yyyy')).resolves.toBe(false);
+    await expect(exists({ pk: 'xxxx', sk: 'yyyy' })).resolves.toBe(false);
 
     spy.mockReturnValue({
       promise: jest.fn().mockResolvedValue({ Item: { id: 'xxxx' } }),
     });
 
-    await expect(exists('xxxx', 'yyyy')).resolves.toBe(true);
+    await expect(exists({ pk: 'xxxx', sk: 'yyyy' })).resolves.toBe(true);
   });
 });

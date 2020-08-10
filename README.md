@@ -13,8 +13,7 @@ Import DynamoHelper
 ```typescript
 import { DynamoHelper } from '@hitz-group/dynamo-helper';
 
-const { DynamoHelper} = require('@hitz-group/dynamo-helper');
-
+const { DynamoHelper } = require('@hitz-group/dynamo-helper');
 ```
 
 Use constructor to create the DynamoHelper instance
@@ -41,26 +40,27 @@ export interface TableConfig {
 import { DynamoHelper } from '@hitz-group/dynamo-helper';
 
 const table = {
- name: 'my-ddb-table',
- indexes: {
-   default: {
-     partitionKeyName: 'pk',
-     sortKeyName: 'sk',
-   }
- }
+  name: 'my-ddb-table',
+  indexes: {
+    default: {
+      partitionKeyName: 'pk',
+      sortKeyName: 'sk',
+    },
+  },
 };
 const client = new DynamoHelper(table, 'ap-south-1');
 
-await client.getItem('library#books', 'book-123');
+await client.getItem({ id: 'book-123' });
+await client.getItem({ pk: 'library#books', sk: 'book-123' });
+
 await client.query({
   where: {
     pk: 'library#books',
     publishedAt: {
-      between: [15550000, 15800000]
-    }
-  }
+      between: [15550000, 15800000],
+    },
+  },
 });
-
 ```
 
 ### buildQueryTableParams
@@ -68,7 +68,7 @@ await client.query({
 ```typescript
 import { buildQueryTableParams } from '@hitz-group/dynamo-helper';
 
-const { buildQueryTableParams} = require('@hitz-group/dynamo-helper');
+const { buildQueryTableParams } = require('@hitz-group/dynamo-helper');
 ```
 
 This method generates DynamoDB query input params from given filter object of type `Filter<T>`
@@ -175,12 +175,25 @@ const products = await dynamoHelper.query<ProductModel>({
 ### getItem
 
 Fetch an item using pk and sk combination. Returns item if found or returns null
+`getItem<T>(key: DocumentClient.Key, fields: Array<keyof T>)`
+
+#### key
+
+Required, at least partition key values must be provided.
+
+#### fields
+
+Optional, specify fields to project
 
 ```typescript
 import { getItem } from '@hitz-group/dynamo-helper';
 
 // Get a single product matching the key
-const product = await dynamoHelper.getItem<ProductModel>('org_uuid', 'product_xxx');
+await dynamoHelper.getItem<ProductModel>({ pk: 'org_uuid', sk: 'product_xxx' });
+await dynamoHelper.getItem<ProductModel>({ id: 'product_xxx' }, [
+  'id',
+  'isActive',
+]);
 ```
 
 ### batchGetItems
@@ -205,7 +218,7 @@ Check if an item exists in the database with the keys provided. Returns a boolea
 import { exists } from '@hitz-group/dynamo-helper';
 
 // Check if product already exists
-if (await dynamoHelper.exists('x', 1)) {
+if (await dynamoHelper.exists({ id: 'x' })) {
   console.log('exists');
 }
 ```
@@ -232,7 +245,7 @@ Remove an item from database matching the key provided if it exists
 import { deleteItem } from '@hitz-group/dynamo-helper';
 
 // delete product
-await dynamoHelper.deleteItem('x', '1'});
+await dynamoHelper.deleteItem({ id: '1' });
 ```
 
 ### transactPutItems
