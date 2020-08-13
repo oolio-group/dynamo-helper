@@ -37,7 +37,7 @@
   },
   "dependencies": {
     "aws-sdk": "2.730.0",
-    "lodash": "4.17.19"
+    "lodash": "4.17.20"
   },
   "devDependencies": {
     "@babel/core": "7.11.1",
