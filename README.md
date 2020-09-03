@@ -365,7 +365,7 @@ if (result.length === 0) {
 ## TODO
 
 - [ ] Scan operation support
-- [ ] Support tables without sort key
+- [x] Support tables without sort key
 
 ## Development
 
