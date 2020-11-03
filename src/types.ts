@@ -159,7 +159,7 @@ export interface Filter<MT extends object = AnyObject> {
    */
   limit?: number;
   /**
-   * Sort order
+   * Sort order. Only works with sort keys
    */
   order?: 'ascending' | 'descending';
 }
