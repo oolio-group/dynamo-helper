@@ -240,5 +240,12 @@ export function buildQueryTableParams<T extends object = AnyObject>(
     tableParams.Limit = filter.limit;
   }
 
+  // Specifies the order for index traversal
+  // If true (default),the traversal is performed in ascending order
+  // if false, the traversal is performed in descending order.
+  if (filter.order) {
+    tableParams.ScanIndexForward = filter.order === 'ascending';
+  }
+
   return tableParams;
 }
