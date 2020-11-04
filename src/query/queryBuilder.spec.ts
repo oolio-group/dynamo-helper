@@ -6,7 +6,7 @@ type ProductModel = {
   id: string;
   isActive: boolean;
   barcode?: string;
-}
+};
 
 const sampleCases = [
   {
@@ -588,6 +588,35 @@ describe('Query Builder', () => {
       limit: 5,
     });
     expect(tableParams.Limit).toBe(5);
+  });
+
+  test('sort order', () => {
+    let tableParams = buildQueryTableParams<ProductModel>({
+      where: {
+        pk: 'xxxx',
+        sk: 'yyyy',
+      },
+    });
+
+    expect(tableParams).not.toHaveProperty('ScanIndexForward');
+
+    tableParams = buildQueryTableParams<ProductModel>({
+      where: {
+        pk: 'xxxx',
+        sk: 'yyyy',
+      },
+      order: 'descending',
+    });
+    expect(tableParams.ScanIndexForward).toBe(false);
+
+    tableParams = buildQueryTableParams<ProductModel>({
+      where: {
+        pk: 'xxxx',
+        sk: 'yyyy',
+      },
+      order: 'ascending',
+    });
+    expect(tableParams.ScanIndexForward).toBe(true);
   });
 
   sampleCases.forEach(x => {

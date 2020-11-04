@@ -158,6 +158,10 @@ export interface Filter<MT extends object = AnyObject> {
    * Maximum number of entities
    */
   limit?: number;
+  /**
+   * Sort order. Only works with sort keys
+   */
+  order?: 'ascending' | 'descending';
 }
 
 type TableIndex = { partitionKeyName: string; sortKeyName?: string };
