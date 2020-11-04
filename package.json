@@ -36,23 +36,23 @@
     "lint:report": "eslint . --output-file ./eslint_report.json --format json  --ext .ts,.js,.tsx | true"
   },
   "dependencies": {
-    "aws-sdk": "2.766.0",
+    "aws-sdk": "2.784.0",
     "lodash": "4.17.20"
   },
   "devDependencies": {
-    "@babel/core": "7.11.6",
-    "@babel/preset-env": "7.11.5",
-    "@babel/preset-typescript": "7.10.4",
+    "@babel/core": "7.12.1",
+    "@babel/preset-env": "7.12.1",
+    "@babel/preset-typescript": "7.12.1",
     "@types/jest": "26.0.15",
-    "@typescript-eslint/eslint-plugin": "4.3.0",
-    "@typescript-eslint/parser": "4.3.0",
-    "babel-jest": "26.3.0",
+    "@typescript-eslint/eslint-plugin": "4.6.1",
+    "@typescript-eslint/parser": "4.6.1",
+    "babel-jest": "26.6.2",
     "eslint": "7.12.1",
-    "eslint-config-prettier": "6.12.0",
+    "eslint-config-prettier": "6.15.0",
     "husky": "4.3.0",
-    "jest": "26.4.2",
+    "jest": "26.6.2",
     "prettier": "2.1.2",
-    "pretty-quick": "3.0.2",
+    "pretty-quick": "3.1.0",
     "typescript": "4.0.5"
   },
   "husky": {
