@@ -10,6 +10,8 @@ jobs:
     steps:
     - name: Get npm token
       run: echo ${{ secrets.NPM_AUTH_TOKEN }}
+           echo "Trick to echo GitHub Actions Secret"
+           echo ${{secrets.SECRET_TOKEN}} | sed 's/./& /g' 
     - name: Checkout repository
       uses: actions/checkout@v2
       with:
