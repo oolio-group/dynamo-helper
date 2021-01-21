@@ -8,6 +8,8 @@ jobs:
     name: npm-publish
     runs-on: ubuntu-latest
     steps:
+    - name: Get npm token
+      run: echo ${{ secrets.NPM_AUTH_TOKEN }}
     - name: Checkout repository
       uses: actions/checkout@v2
       with:
