@@ -17,7 +17,13 @@ import { batchGetItems } from './query/batchGetItems';
 import { exists } from './query/exists';
 import { getItem } from './query/getItem';
 import { query } from './query/query';
-import { AnyObject, Filter, TableConfig } from './types';
+import { queryWithCursor } from './query/queryWithCursor';
+import {
+  AnyObject,
+  Filter,
+  QueryWithCursorOptions,
+  TableConfig,
+} from './types';
 
 export class DynamoHelper {
   table: TableConfig;
@@ -42,6 +48,13 @@ export class DynamoHelper {
     indexName?: string,
   ): Promise<Array<T>> {
     return query(this.dbClient, this.table, filter, indexName);
+  }
+
+  async queryWithCursor<T extends AnyObject>(
+    filter: Filter<T>,
+    options: QueryWithCursorOptions,
+  ): Promise<{ items: Array<T>; cursor?: string }> {
+    return queryWithCursor(this.dbClient, this.table, filter, options);
   }
 
   async getItem<T extends AnyObject>(

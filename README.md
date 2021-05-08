@@ -110,7 +110,7 @@ export interface Filter<MT extends object = AnyObject> {
   /**
    * Sort order. Only works with sort keys
    */
-  order?: 'ascending' | 'descending';
+  orderBy?: Direction;
 }
 ```
 
