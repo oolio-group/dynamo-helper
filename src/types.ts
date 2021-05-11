@@ -165,6 +165,11 @@ export interface Filter<MT extends object = AnyObject> {
    * Sort order. Only works with sort keys
    */
   orderBy?: Direction;
+
+  /**
+   * Only be used with cursor based `query`
+   */
+  prevCursor?: string;
 }
 
 type TableIndex = { partitionKeyName: string; sortKeyName?: string };
@@ -178,10 +183,5 @@ export interface TableConfig {
    * eg: indexes: { default: { partitionKeyName: 'pk', sortKeyName: 'sk' } }
    */
   indexes: { default: TableIndex } & Record<string, TableIndex>;
-}
-
-export interface QueryWithCursorOptions {
-  indexName?: string;
-  prevCursor?: string; // the last cursor position
-  secret: string; // used to encrypt cursor
+  cursorSecret?: string; // used to mask the lastEvaluatedKey in query result
 }

@@ -10,7 +10,10 @@ import { queryWithCursor } from './queryWithCursor';
 import { decrypt } from '../utils';
 
 describe('queryWithCursor', () => {
-  const query = queryWithCursor.bind(null, testClient, testTableConf);
+  const query = queryWithCursor.bind(null, testClient, {
+    ...testTableConf,
+    cursorSecret: 'secret',
+  });
   let mockQuery: jest.SpyInstance;
   beforeEach(() => {
     mockQuery = jest.spyOn(testClient, 'query').mockReturnValue({
@@ -47,40 +50,38 @@ describe('queryWithCursor', () => {
 
   test('input validation', async () => {
     await expect(
-      query(
-        {
-          where: {
-            pk: {
-              beginsWith: 'product',
-            },
-          } as Where<{ pk: string }>,
-        },
-        { secret: 'secret' },
-      ),
+      query({
+        where: {
+          pk: {
+            beginsWith: 'product',
+          },
+        } as Where<{ pk: string }>,
+      }),
     ).rejects.toThrowError('Partition key condition can only be a string');
   });
 
   test('input validation', async () => {
+    const queryWithoutSk = queryWithCursor.bind(null, testClient, {
+      ...testTableConf,
+      cussorSecret: undefined,
+    });
     await expect(
-      query({
+      queryWithoutSk({
         where: {
           pk: 'product',
         } as Where<{ pk: string }>,
       }),
     ).rejects.toThrowError(
-      'Expected secret which is used to encrypt the `LastEvaluatedKey`',
+      'Expected `cursorSecret` which is used to encrypt the `LastEvaluatedKey`',
     );
   });
 
   test('when there are no items available in table, returns empty', async () => {
-    const results = await query(
-      {
-        where: {
-          pk: 'xxxx',
-        },
+    const results = await query({
+      where: {
+        pk: 'xxxx',
       },
-      { secret: 'secret' },
-    );
+    });
 
     expect(results.items).toHaveLength(0);
     expect(results.cursor).toBeUndefined();
@@ -93,10 +94,7 @@ describe('queryWithCursor', () => {
           sk: 'xxxx',
         },
       },
-      {
-        indexName: 'reverse',
-        secret: 'secret',
-      },
+      'reverse',
     );
 
     expect(testClient.query).toHaveBeenCalledWith({
@@ -124,7 +122,9 @@ const ITEMS = new Array(TOTAL_RECORDS).fill(0).map((item, i) => {
   const date = new Date(2021, Math.floor(Math.random() * 6) + 1, i);
   return {
     pk: `pk#${item}`,
-    sk: `sk#${date.getFullYear()}#${date.getMonth()}#${date.getDate()}`,
+    sk: `sk#${date.getFullYear()}#${date.getMonth()}#${date.getDate()}+${
+      Math.floor(Math.random() * 6000) + 1000
+    }`,
   };
 });
 class DbQuery {
@@ -164,7 +164,10 @@ class DbQuery {
 
 describe('Pagination', () => {
   let mockQuery: jest.SpyInstance;
-  const query = queryWithCursor.bind(null, testClient, testTableConf);
+  const query = queryWithCursor.bind(null, testClient, {
+    ...testTableConf,
+    cursorSecret: 'secret',
+  });
 
   beforeEach(() => {
     mockQuery = jest
@@ -198,14 +201,9 @@ describe('Pagination', () => {
   });
 
   test('with default page size (all items) and sort order', async () => {
-    const result = await query(
-      {
-        where: { pk: 'xxxx' },
-      },
-      {
-        secret: 'secret',
-      },
-    );
+    const result = await query({
+      where: { pk: 'xxxx' },
+    });
     expect(testClient.query).toHaveBeenCalledTimes(1);
     expect(result.items).toHaveLength(50);
     expect(result.cursor).toBeUndefined();
@@ -227,17 +225,12 @@ describe('Pagination', () => {
   });
 
   test('with customm page size', async () => {
-    const result = await query(
-      {
-        where: {
-          pk: 'xxxx',
-        },
-        limit: 5,
+    const result = await query({
+      where: {
+        pk: 'xxxx',
       },
-      {
-        secret: 'secret',
-      },
-    );
+      limit: 5,
+    });
     expect(testClient.query).toHaveBeenCalledTimes(1);
     expect(result.items).toHaveLength(5);
     expect(typeof result.cursor).toBe('string');
@@ -257,18 +250,13 @@ describe('Pagination', () => {
   });
 
   test('with customm page size and custom orderBy ', async () => {
-    const result = await query(
-      {
-        where: {
-          pk: 'xxxx',
-        },
-        limit: 5,
-        orderBy: Direction.DESC,
+    const result = await query({
+      where: {
+        pk: 'xxxx',
       },
-      {
-        secret: 'secret',
-      },
-    );
+      limit: 5,
+      orderBy: Direction.DESC,
+    });
     expect(testClient.query).toHaveBeenCalledTimes(1);
     expect(result.items).toHaveLength(5);
     expect(typeof result.cursor).toBe('string');
@@ -292,17 +280,12 @@ describe('Pagination', () => {
   });
 
   test('initial request with custom page size', async () => {
-    const result = await query(
-      {
-        where: {
-          pk: 'xxxx',
-        },
-        limit: 5,
+    const result = await query({
+      where: {
+        pk: 'xxxx',
       },
-      {
-        secret: 'secret',
-      },
-    );
+      limit: 5,
+    });
     expect(testClient.query).toHaveBeenCalledTimes(1);
     expect(result.items).toHaveLength(5);
     expect(typeof result.cursor).toBe('string');
@@ -329,18 +312,13 @@ describe('Pagination', () => {
 
     const actualItems = ITEMS.sort((a, b) => a.sk.localeCompare(b.sk));
     do {
-      const result = await query(
-        {
-          where: {
-            pk: 'xxxx',
-          },
-          limit: PAGE_SIZE,
+      const result = await query({
+        where: {
+          pk: 'xxxx',
         },
-        {
-          secret: 'secret',
-          prevCursor,
-        },
-      );
+        limit: PAGE_SIZE,
+        prevCursor,
+      });
 
       expect(testClient.query).toHaveBeenNthCalledWith(i, {
         TableName: testTableConf.name,

@@ -1,11 +1,6 @@
 import { DocumentClient, Key, QueryOutput } from 'aws-sdk/clients/dynamodb';
 import { decrypt, encrypt } from '../utils';
-import {
-  AnyObject,
-  Filter,
-  QueryWithCursorOptions,
-  TableConfig,
-} from '../types';
+import { AnyObject, Filter, TableConfig } from '../types';
 import { buildQueryTableParams } from './queryBuilder';
 
 /**
@@ -19,18 +14,17 @@ export async function queryWithCursor<T extends AnyObject>(
   dbClient: DocumentClient,
   table: TableConfig,
   filter: Filter<T>,
-  options: QueryWithCursorOptions,
+  indexName = 'default',
 ): Promise<{ items: Array<T>; cursor?: string }> {
-  const { indexName = 'default', prevCursor, secret } = options || {};
   const { partitionKeyName, sortKeyName } = table.indexes[indexName];
 
   if (!sortKeyName) {
     throw new Error('Expected sortKey to query');
   }
 
-  if (!secret) {
+  if (!table.cursorSecret) {
     throw new Error(
-      'Expected secret which is used to encrypt the `LastEvaluatedKey`',
+      'Expected `cursorSecret` which is used to encrypt the `LastEvaluatedKey`',
     );
   }
 
@@ -40,7 +34,10 @@ export async function queryWithCursor<T extends AnyObject>(
   if (indexName) {
     params.IndexName = indexName;
   }
-  params.ExclusiveStartKey = decrypt<Key>(prevCursor, secret);
+  params.ExclusiveStartKey = decrypt<Key>(
+    filter.prevCursor,
+    table.cursorSecret,
+  );
 
   const { LastEvaluatedKey, Items }: QueryOutput = await dbClient
     .query(params)
@@ -48,6 +45,6 @@ export async function queryWithCursor<T extends AnyObject>(
 
   return {
     items: Items as T[],
-    cursor: encrypt<Key>(LastEvaluatedKey, secret),
+    cursor: encrypt<Key>(LastEvaluatedKey, table.cursorSecret),
   };
 }
