@@ -18,12 +18,7 @@ import { exists } from './query/exists';
 import { getItem } from './query/getItem';
 import { query } from './query/query';
 import { queryWithCursor } from './query/queryWithCursor';
-import {
-  AnyObject,
-  Filter,
-  QueryWithCursorOptions,
-  TableConfig,
-} from './types';
+import { AnyObject, Filter, TableConfig } from './types';
 
 export class DynamoHelper {
   table: TableConfig;
@@ -52,9 +47,9 @@ export class DynamoHelper {
 
   async queryWithCursor<T extends AnyObject>(
     filter: Filter<T>,
-    options: QueryWithCursorOptions,
+    indexName?: string,
   ): Promise<{ items: Array<T>; cursor?: string }> {
-    return queryWithCursor(this.dbClient, this.table, filter, options);
+    return queryWithCursor(this.dbClient, this.table, filter, indexName);
   }
 
   async getItem<T extends AnyObject>(
