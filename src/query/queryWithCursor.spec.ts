@@ -127,7 +127,7 @@ const ITEMS = new Array(TOTAL_RECORDS).fill(0).map((item, i) => {
     }`,
   };
 });
-class DbQuery {
+class DynamoDBPaginateQueryMockImpl {
   private _records = ITEMS;
 
   get records(): Item[] {
@@ -173,7 +173,10 @@ describe('Pagination', () => {
     mockQuery = jest
       .spyOn(testClient, 'query')
       .mockImplementation((params: QueryInput) => {
-        const { items, processed } = new DbQuery()
+        const {
+          items,
+          processed,
+        } = new DynamoDBPaginateQueryMockImpl()
           .sortItems(params)
           .filterItems(params, params.Limit);
 
