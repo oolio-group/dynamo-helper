@@ -1,3 +1,4 @@
+import { Direction } from '../types';
 import { buildQueryTableParams } from './queryBuilder';
 
 type ProductModel = {
@@ -605,7 +606,7 @@ describe('Query Builder', () => {
         pk: 'xxxx',
         sk: 'yyyy',
       },
-      order: 'descending',
+      orderBy: Direction.DESC,
     });
     expect(tableParams.ScanIndexForward).toBe(false);
 
@@ -614,7 +615,7 @@ describe('Query Builder', () => {
         pk: 'xxxx',
         sk: 'yyyy',
       },
-      order: 'ascending',
+      orderBy: Direction.ASC,
     });
     expect(tableParams.ScanIndexForward).toBe(true);
   });

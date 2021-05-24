@@ -110,7 +110,7 @@ export interface Filter<MT extends object = AnyObject> {
   /**
    * Sort order. Only works with sort keys
    */
-  order?: 'ascending' | 'descending';
+  orderBy?: Direction;
 }
 ```
 
@@ -160,6 +160,48 @@ const products = await dynamoHelper.query<ProductModel>({
     isActive: false,
     fields: ['id'],
   },
+});
+```
+
+### pginated based query (cursor)
+
+- DynamoDB official docs - [Paginate table query result](https://docs.amazonaws.cn/en_us/amazondynamodb/latest/developerguide/Query.Pagination.html) and [Query](https://docs.aws.amazon.com/amazondynamodb/latest/APIReference/API_Query.html)
+- To use this method, the table must have a `range key` associated to partition key
+- Using the method from this library (`queryWithCursor`)
+  Example 1:
+
+```tsx
+// Paginate with a custom page size (refer to AWS DynamoDB docs to check the max size / limit)
+// Get first `6` organizations (DynamoDB default sort order will be ascending)
+const resultForFirstIterationOrPage = await query({
+  where: {
+    pk: 'org_uuid',
+  },
+  limit: 6,
+});
+
+// The next `6` orgs can be retrived based on the `cursor` value (from previous response)
+const resultForFirstIterationOrPage = await query({
+  where: {
+    pk: 'org_uuid',
+  },
+  limit: 6,
+  prevCursor: result.cursor,
+});
+
+// The same step can be repeated until the `cursor` returns `undefined`
+```
+
+Example 2:
+
+```tsx
+// Sort the results in reverse order with a page size `7`- descending
+const result = await query({
+  where: {
+    pk: 'org_uuid',
+  },
+  limit: 7,
+  orderBy: Direction.DESC,
 });
 ```
 

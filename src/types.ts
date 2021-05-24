@@ -132,7 +132,10 @@ export interface OrClause<MT extends object> {
 /**
  * Order by direction
  */
-export type Direction = 'ASC' | 'DESC';
+export enum Direction {
+  ASC = 'ASC',
+  DESC = 'DESC',
+}
 
 /**
  * Selection of fields
@@ -161,7 +164,12 @@ export interface Filter<MT extends object = AnyObject> {
   /**
    * Sort order. Only works with sort keys
    */
-  order?: 'ascending' | 'descending';
+  orderBy?: Direction;
+
+  /**
+   * Only be used with cursor based `query`
+   */
+  prevCursor?: string;
 }
 
 type TableIndex = { partitionKeyName: string; sortKeyName?: string };
@@ -175,4 +183,5 @@ export interface TableConfig {
    * eg: indexes: { default: { partitionKeyName: 'pk', sortKeyName: 'sk' } }
    */
   indexes: { default: TableIndex } & Record<string, TableIndex>;
+  cursorSecret?: string; // used to mask the lastEvaluatedKey in query result
 }
