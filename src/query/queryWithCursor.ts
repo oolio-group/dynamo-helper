@@ -15,7 +15,7 @@ export async function queryWithCursor<T extends AnyObject>(
   table: TableConfig,
   filter: Filter<T>,
   indexName = 'default',
-): Promise<{ items: Array<T>; cursor?: string }> {
+): Promise<{ items: Array<T>; cursor?: string; scannedCount: number }> {
   const { partitionKeyName, sortKeyName } = table.indexes[indexName];
 
   if (!sortKeyName) {
@@ -39,12 +39,15 @@ export async function queryWithCursor<T extends AnyObject>(
     table.cursorSecret,
   );
 
-  const { LastEvaluatedKey, Items }: QueryOutput = await dbClient
-    .query(params)
-    .promise();
+  const {
+    LastEvaluatedKey,
+    Items,
+    ScannedCount,
+  }: QueryOutput = await dbClient.query(params).promise();
 
   return {
     items: Items as T[],
     cursor: encrypt<Key>(LastEvaluatedKey, table.cursorSecret),
+    scannedCount: ScannedCount,
   };
 }

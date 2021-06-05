@@ -193,6 +193,7 @@ describe('Pagination', () => {
             return Promise.resolve({
               Items: (items as unknown) as ItemList,
               LastEvaluatedKey: lastEvaluatedKey,
+              ScannedCount: TOTAL_RECORDS,
             } as QueryOutput);
           }),
         };
@@ -351,6 +352,8 @@ describe('Pagination', () => {
       items = items.concat(result.items);
 
       prevCursor = result.cursor;
+
+      expect(result.scannedCount).toBe(actualItems.length);
       i++;
     } while (prevCursor);
 
