@@ -170,6 +170,11 @@ export interface Filter<MT extends object = AnyObject> {
    * Only be used with cursor based `query`
    */
   prevCursor?: string;
+
+  /**
+   * Only be used with cursor based `query`
+   */
+  ScanIndexForward?: boolean;
 }
 
 type TableIndex = { partitionKeyName: string; sortKeyName?: string };

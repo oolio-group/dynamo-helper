@@ -34,6 +34,8 @@ export async function queryWithCursor<T extends AnyObject>(
   if (indexName) {
     params.IndexName = indexName;
   }
+
+  params.ScanIndexForward = filter.ScanIndexForward;
   params.ExclusiveStartKey = decrypt<Key>(
     filter.prevCursor,
     table.cursorSecret,
