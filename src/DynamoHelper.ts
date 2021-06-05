@@ -48,7 +48,7 @@ export class DynamoHelper {
   async queryWithCursor<T extends AnyObject>(
     filter: Filter<T>,
     indexName?: string,
-  ): Promise<{ items: Array<T>; cursor?: string }> {
+  ): Promise<{ items: Array<T>; cursor?: string; scannedCount: number }> {
     return queryWithCursor(this.dbClient, this.table, filter, indexName);
   }
 
