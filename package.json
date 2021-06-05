@@ -5,7 +5,6 @@
     "dynamodb",
     "aws",
     "dynamo",
-    "documentclient",
     "nosql"
   ],
   "version": "0.4.2",
