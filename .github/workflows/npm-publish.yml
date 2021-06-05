@@ -10,6 +10,8 @@ jobs:
     steps:
     - name: Checkout repository
       uses: actions/checkout@v2
+      with:
+        token: ${{ secrets.DEPLOYMENT_TOKEN }}
     - name: Install Node Dependencies
       run: yarn install
     - name: Build packages
