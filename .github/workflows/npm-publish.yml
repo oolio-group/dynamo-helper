@@ -23,7 +23,6 @@ jobs:
         tag_message: "v%s"
         commit_pattern: "^Release (\\S+)"
         workspace: "."
-        publish_args: "--access public"
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         NPM_AUTH_TOKEN: ${{ secrets.NPM_AUTH_TOKEN }}
