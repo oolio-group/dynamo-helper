@@ -118,7 +118,6 @@ interface Item {
 const TOTAL_RECORDS = 50;
 
 const ITEMS = new Array(TOTAL_RECORDS).fill(0).map((item, i) => {
-  // const date = new Date(2021, Math.floor(Math.random() * 6) + 1, i);
   return {
     pk: `pk#${item}`,
     sk: `sk#${i}`,
@@ -162,9 +161,13 @@ describe('Pagination', () => {
     mockQuery = jest
       .spyOn(testClient, 'query')
       .mockImplementation((params: QueryInput) => {
-        const { items, processed } = new DynamoDBPaginateQueryMockImpl()
-          // .sortItems(params)
-          .filterItems(params, params.Limit);
+        const {
+          items,
+          processed,
+        } = new DynamoDBPaginateQueryMockImpl().filterItems(
+          params,
+          params.Limit,
+        );
 
         let lastEvaluatedKey;
         if (params.Limit) {
