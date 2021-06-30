@@ -39,15 +39,36 @@ export async function queryWithCursor<T extends AnyObject>(
     table.cursorSecret,
   );
 
-  const {
-    LastEvaluatedKey,
-    Items,
-    ScannedCount,
-  }: QueryOutput = await dbClient.query(params).promise();
+  let itemsData = [];
+  let LastEvaluatedKeyOutput: Key = undefined;
+  let canIterate = true;
+  let scannedCountCopy = 0;
+
+  do {
+    const {
+      LastEvaluatedKey,
+      Items,
+      ScannedCount,
+    }: QueryOutput = await dbClient.query(params).promise();
+
+    LastEvaluatedKeyOutput = LastEvaluatedKey;
+
+    scannedCountCopy = ScannedCount;
+
+    if (LastEvaluatedKeyOutput) {
+      params.ExclusiveStartKey = LastEvaluatedKeyOutput;
+    }
+
+    itemsData = itemsData.concat(Items);
+
+    if (itemsData?.length >= params?.Limit) {
+      canIterate = false;
+    }
+  } while (LastEvaluatedKeyOutput && canIterate);
 
   return {
-    items: Items as T[],
-    cursor: encrypt<Key>(LastEvaluatedKey, table.cursorSecret),
-    scannedCount: ScannedCount,
+    items: itemsData as T[],
+    cursor: encrypt<Key>(LastEvaluatedKeyOutput, table.cursorSecret),
+    scannedCount: scannedCountCopy,
   };
 }
