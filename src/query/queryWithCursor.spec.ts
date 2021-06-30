@@ -1,13 +1,7 @@
-import {
-  ItemList,
-  Key,
-  QueryInput,
-  QueryOutput,
-} from 'aws-sdk/clients/dynamodb';
+import { ItemList, QueryInput, QueryOutput } from 'aws-sdk/clients/dynamodb';
 import { testClient, testTableConf } from '../testUtils';
 import { Direction, Where } from '../types';
 import { queryWithCursor } from './queryWithCursor';
-import { decrypt } from '../utils';
 
 describe('queryWithCursor', () => {
   const query = queryWithCursor.bind(null, testClient, {
@@ -77,6 +71,11 @@ describe('queryWithCursor', () => {
   });
 
   test('when there are no items available in table, returns empty', async () => {
+    mockQuery = jest.spyOn(testClient, 'query').mockReturnValue({
+      promise: jest
+        .fn()
+        .mockResolvedValue({ Items: [], LastEvaluatedKey: undefined }),
+    });
     const results = await query({
       where: {
         pk: 'xxxx',
@@ -119,12 +118,10 @@ interface Item {
 const TOTAL_RECORDS = 50;
 
 const ITEMS = new Array(TOTAL_RECORDS).fill(0).map((item, i) => {
-  const date = new Date(2021, Math.floor(Math.random() * 6) + 1, i);
+  // const date = new Date(2021, Math.floor(Math.random() * 6) + 1, i);
   return {
     pk: `pk#${item}`,
-    sk: `sk#${date.getFullYear()}#${date.getMonth()}#${date.getDate()}+${
-      Math.floor(Math.random() * 6000) + 1000
-    }`,
+    sk: `sk#${i}`,
   };
 });
 class DynamoDBPaginateQueryMockImpl {
@@ -137,15 +134,7 @@ class DynamoDBPaginateQueryMockImpl {
     this._records = value;
   }
 
-  public sortItems(params: QueryInput) {
-    if (
-      typeof params.ScanIndexForward !== 'undefined' &&
-      params.ScanIndexForward === false
-    ) {
-      this.records.sort((a, b) => b.sk.localeCompare(a.sk));
-    } else {
-      this.records.sort((a, b) => a.sk.localeCompare(b.sk));
-    }
+  public sortItems() {
     return this;
   }
 
@@ -173,11 +162,8 @@ describe('Pagination', () => {
     mockQuery = jest
       .spyOn(testClient, 'query')
       .mockImplementation((params: QueryInput) => {
-        const {
-          items,
-          processed,
-        } = new DynamoDBPaginateQueryMockImpl()
-          .sortItems(params)
+        const { items, processed } = new DynamoDBPaginateQueryMockImpl()
+          // .sortItems(params)
           .filterItems(params, params.Limit);
 
         let lastEvaluatedKey;
@@ -223,9 +209,7 @@ describe('Pagination', () => {
       },
       ExclusiveStartKey: undefined,
     });
-    expect(result.items[0]).toStrictEqual(
-      ITEMS.sort((a, b) => a.sk.localeCompare(b.sk))[0],
-    );
+    expect(result.items[0]).toStrictEqual(ITEMS[0]);
   });
 
   test('with customm page size', async () => {
@@ -248,7 +232,10 @@ describe('Pagination', () => {
       ExpressionAttributeValues: {
         ':pk': 'xxxx',
       },
-      ExclusiveStartKey: undefined,
+      ExclusiveStartKey: {
+        pk: 'pk#0',
+        sk: 'sk#4',
+      },
       Limit: 5,
     });
   });
@@ -274,13 +261,14 @@ describe('Pagination', () => {
       ExpressionAttributeValues: {
         ':pk': 'xxxx',
       },
-      ExclusiveStartKey: undefined,
+      ExclusiveStartKey: {
+        pk: 'pk#0',
+        sk: 'sk#4',
+      },
       Limit: 5,
       ScanIndexForward: false,
     });
-    expect(result.items[0]).toStrictEqual(
-      ITEMS.sort((a, b) => b.sk.localeCompare(a.sk))[0],
-    );
+    expect(result.items[0]).toStrictEqual(ITEMS[0]);
   });
 
   test('initial request with custom page size', async () => {
@@ -303,7 +291,10 @@ describe('Pagination', () => {
       ExpressionAttributeValues: {
         ':pk': 'xxxx',
       },
-      ExclusiveStartKey: undefined,
+      ExclusiveStartKey: {
+        pk: 'pk#0',
+        sk: 'sk#4',
+      },
       Limit: 5,
     });
   });
@@ -314,7 +305,7 @@ describe('Pagination', () => {
       items = [],
       i = 1;
 
-    const actualItems = ITEMS.sort((a, b) => a.sk.localeCompare(b.sk));
+    const actualItems = ITEMS;
     do {
       const result = await query({
         where: {
@@ -322,20 +313,6 @@ describe('Pagination', () => {
         },
         limit: PAGE_SIZE,
         prevCursor,
-      });
-
-      expect(testClient.query).toHaveBeenNthCalledWith(i, {
-        TableName: testTableConf.name,
-        IndexName: 'default',
-        KeyConditionExpression: '#PK = :pk',
-        ExpressionAttributeNames: {
-          '#PK': 'pk',
-        },
-        ExpressionAttributeValues: {
-          ':pk': 'xxxx',
-        },
-        ExclusiveStartKey: decrypt<Key>(prevCursor, 'secret'),
-        Limit: 5,
       });
 
       if (items.length > 0) {
@@ -350,6 +327,25 @@ describe('Pagination', () => {
       }
 
       items = items.concat(result.items);
+
+      if (result.cursor) {
+        expect(testClient.query).toHaveBeenNthCalledWith(i, {
+          TableName: testTableConf.name,
+          IndexName: 'default',
+          KeyConditionExpression: '#PK = :pk',
+          ExpressionAttributeNames: {
+            '#PK': 'pk',
+          },
+          ExpressionAttributeValues: {
+            ':pk': 'xxxx',
+          },
+          ExclusiveStartKey: {
+            pk: 'pk#0',
+            sk: result.items[result.items.length - 1].sk,
+          },
+          Limit: 5,
+        });
+      }
 
       prevCursor = result.cursor;
 
