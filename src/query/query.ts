@@ -36,8 +36,12 @@ export async function query<T extends AnyObject>(
 
     items = items.concat(result.Items as T[]);
 
+    // if next item available it is not undefined
     lastEvaluatedKey = result.LastEvaluatedKey;
-  } while (lastEvaluatedKey);
+  } while (
+    lastEvaluatedKey &&
+    (params?.Limit ? items.length < params.Limit : true)
+  );
 
   return items;
 }
