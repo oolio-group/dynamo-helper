@@ -149,26 +149,29 @@ const USERS = [
 ];
 const randomNo = (start: number, end: number): number =>
   Math.floor(Math.random() * end) + start;
-const ITEMS = new Array(TOTAL_RECORDS)
-  .fill(0)
-  .map((item, i) => {
-    const date = new Date(2021, randomNo(1, 6), i);
-    const status = STATUS_DICT[Math.floor(Math.random() * STATUS_DICT.length)];
-    return [
-      {
-        pk: 'pk#products',
-        sk: `sk#${date.getFullYear()}#${date.getMonth()}#${date.getDate()}+${
-          Math.floor(Math.random() * 6000) + 1000
-        }`,
-      },
-      {
-        pk: `pk#order#${status}`,
-        sk: `${date.getFullYear()}#${date.getMonth()}#${date.getDate()}`,
-        createdBy: USERS[Math.floor(Math.random() * USERS.length)],
-      },
-    ];
-  })
-  .flat();
+const generateItems = () =>
+  new Array(TOTAL_RECORDS)
+    .fill(0)
+    .map((item, i) => {
+      const date = new Date(2021, randomNo(1, 6), i);
+      const status =
+        STATUS_DICT[Math.floor(Math.random() * STATUS_DICT.length)];
+      return [
+        {
+          pk: 'pk#products',
+          sk: `sk#${date.getFullYear()}#${date.getMonth()}#${date.getDate()}+${
+            Math.floor(Math.random() * 6000) + 1000
+          }`,
+        },
+        {
+          pk: `pk#order#${status}`,
+          sk: `${date.getFullYear()}#${date.getMonth()}#${date.getDate()}`,
+          createdBy: USERS[Math.floor(Math.random() * USERS.length)],
+        },
+      ];
+    })
+    .flat();
+const ITEMS = generateItems();
 
 class DynamoDBPaginateQueryMockImpl {
   private _records = ITEMS;
