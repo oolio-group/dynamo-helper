@@ -64,7 +64,7 @@ export async function queryWithCursor<T extends AnyObject>(
     if (itemsData?.length >= params?.Limit) {
       canIterate = false;
     }
-  } while (LastEvaluatedKeyOutput && canIterate);
+  } while (LastEvaluatedKeyOutput && canIterate && params?.Limit);
 
   return {
     items: itemsData as T[],
