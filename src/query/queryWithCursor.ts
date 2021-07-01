@@ -3,6 +3,8 @@ import { decrypt, encrypt } from '../utils';
 import { AnyObject, Filter, TableConfig } from '../types';
 import { buildQueryTableParams } from './queryBuilder';
 
+const MAX_LIMIT = 50;
+
 /**
  * Cursor based query which returns list of matching items and the last cursor position
  *
@@ -30,6 +32,15 @@ export async function queryWithCursor<T extends AnyObject>(
 
   const params = buildQueryTableParams(filter, partitionKeyName, sortKeyName);
 
+  if (params.Limit) {
+    if (params.Limit > MAX_LIMIT) {
+      throw new Error(`Maximum limit of ${MAX_LIMIT} can be applied`);
+    }
+  } else {
+    // apply a default limit
+    params.Limit = MAX_LIMIT;
+  }
+
   params.TableName = table.name;
   if (indexName) {
     params.IndexName = indexName;
@@ -39,36 +50,24 @@ export async function queryWithCursor<T extends AnyObject>(
     table.cursorSecret,
   );
 
-  let itemsData = [];
-  let LastEvaluatedKeyOutput: Key = undefined;
-  let canIterate = true;
-  let scannedCountCopy = 0;
+  let items = [];
+  let totalScannedCount = 0;
+  let output: QueryOutput = {};
 
   do {
-    const {
-      LastEvaluatedKey,
-      Items,
-      ScannedCount,
-    }: QueryOutput = await dbClient.query(params).promise();
-
-    LastEvaluatedKeyOutput = LastEvaluatedKey;
-
-    scannedCountCopy = ScannedCount;
-
-    if (LastEvaluatedKeyOutput) {
-      params.ExclusiveStartKey = LastEvaluatedKeyOutput;
+    if (output.LastEvaluatedKey) {
+      params.ExclusiveStartKey = output.LastEvaluatedKey;
     }
 
-    itemsData = itemsData.concat(Items);
+    output = await dbClient.query(params).promise();
+    totalScannedCount += output.ScannedCount;
 
-    if (itemsData?.length >= params?.Limit) {
-      canIterate = false;
-    }
-  } while (LastEvaluatedKeyOutput && canIterate);
+    items = items.concat(output.Items);
+  } while (output.LastEvaluatedKey && !(items.length >= params.Limit));
 
   return {
-    items: itemsData as T[],
-    cursor: encrypt<Key>(LastEvaluatedKeyOutput, table.cursorSecret),
-    scannedCount: scannedCountCopy,
+    items: items as T[],
+    cursor: encrypt<Key>(output.LastEvaluatedKey, table.cursorSecret),
+    scannedCount: totalScannedCount,
   };
 }
