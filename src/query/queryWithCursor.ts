@@ -3,6 +3,8 @@ import { decrypt, encrypt } from '../utils';
 import { AnyObject, Filter, TableConfig } from '../types';
 import { buildQueryTableParams } from './queryBuilder';
 
+const MAX_LIMIT = 50;
+
 /**
  * Cursor based query which returns list of matching items and the last cursor position
  *
@@ -30,6 +32,15 @@ export async function queryWithCursor<T extends AnyObject>(
 
   const params = buildQueryTableParams(filter, partitionKeyName, sortKeyName);
 
+  if (params.Limit) {
+    if (params.Limit > MAX_LIMIT) {
+      throw new Error(`Maximum limit of ${MAX_LIMIT} can be applied`);
+    }
+  } else {
+    // apply a default limit
+    params.Limit = MAX_LIMIT;
+  }
+
   params.TableName = table.name;
   if (indexName) {
     params.IndexName = indexName;
@@ -39,15 +50,24 @@ export async function queryWithCursor<T extends AnyObject>(
     table.cursorSecret,
   );
 
-  const {
-    LastEvaluatedKey,
-    Items,
-    ScannedCount,
-  }: QueryOutput = await dbClient.query(params).promise();
+  let items = [];
+  let totalScannedCount = 0;
+  let output: QueryOutput = {};
+
+  do {
+    if (output.LastEvaluatedKey) {
+      params.ExclusiveStartKey = output.LastEvaluatedKey;
+    }
+
+    output = await dbClient.query(params).promise();
+    totalScannedCount += output.ScannedCount;
+
+    items = items.concat(output.Items);
+  } while (output.LastEvaluatedKey && !(items.length >= params.Limit));
 
   return {
-    items: Items as T[],
-    cursor: encrypt<Key>(LastEvaluatedKey, table.cursorSecret),
-    scannedCount: ScannedCount,
+    items: items as T[],
+    cursor: encrypt<Key>(output.LastEvaluatedKey, table.cursorSecret),
+    scannedCount: totalScannedCount,
   };
 }
