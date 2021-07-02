@@ -165,14 +165,14 @@ function buildConditionExpressions<T extends object = AnyObject>(
             ` AND ${valueExpression}_end`,
         );
       } else if (operator === 'IN') {
-        // works for only first IN operation
         let expressionTemp = '';
         condition.forEach((eachVal, index) => {
-          expressionAttributeValues[`:val${index + 1}`] = eachVal;
+          expressionAttributeValues[`${valueExpression}${index + 1}`] = eachVal;
           if (!expressionTemp) {
-            expressionTemp = expressionTemp + `:val${index + 1}`;
+            expressionTemp = expressionTemp + `${valueExpression}${index + 1}`;
           } else {
-            expressionTemp = expressionTemp + `, :val${index + 1}`;
+            expressionTemp =
+              expressionTemp + `, ${valueExpression}${index + 1}`;
           }
         });
         filterExpression.push(`${keyName} in (${expressionTemp})`);
