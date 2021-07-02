@@ -165,8 +165,17 @@ function buildConditionExpressions<T extends object = AnyObject>(
             ` AND ${valueExpression}_end`,
         );
       } else if (operator === 'IN') {
-        expressionAttributeValues[valueExpression] = `(${condition.join(',')})`;
-        filterExpression.push(`${keyName} ${operator} ${valueExpression}`);
+        // works for only first IN operation
+        let expressionTemp = '';
+        condition.forEach((eachVal, index) => {
+          expressionAttributeValues[`:val${index + 1}`] = eachVal;
+          if (!expressionTemp) {
+            expressionTemp = expressionTemp + `:val${index + 1}`;
+          } else {
+            expressionTemp = expressionTemp + `, :val${index + 1}`;
+          }
+        });
+        filterExpression.push(`${keyName} in (${expressionTemp})`);
       } else if (operator === 'CONTAINS') {
         expressionAttributeValues[valueExpression] = condition;
         filterExpression.push(
