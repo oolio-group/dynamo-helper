@@ -243,14 +243,15 @@ const sampleCases = [
     },
     expected: {
       KeyConditionExpression: '#PK = :pk',
-      FilterExpression: '#ID IN :id',
+      FilterExpression: '#ID in (:id1, :id2)',
       ExpressionAttributeNames: {
         '#PK': 'pk',
         '#ID': 'id',
       },
       ExpressionAttributeValues: {
         ':pk': 'xxxx',
-        ':id': '(yyyy,zzzz)',
+        ':id1': 'yyyy',
+        ':id2': 'zzzz',
       },
     },
   },
