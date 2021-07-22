@@ -169,21 +169,21 @@ function buildConditionExpressions<T extends object = AnyObject>(
         const arraysOfContaingMax100Values = [];
         let tempArray = [];
         condition.forEach((eachVal, index) => {
-          if ((index + 1) % 100 === 0) {
+          tempArray.push(eachVal);
+          if (
+            (index + 1) % 100 === 0 ||
+            (condition.length < 100 && index + 1 === condition.length)
+          ) {
             arraysOfContaingMax100Values.push(tempArray);
             tempArray = [];
-          } else if (condition.length < 100 && index + 1 === condition.length) {
-            tempArray.push(eachVal);
-            arraysOfContaingMax100Values.push(tempArray);
-          } else {
-            tempArray.push(eachVal);
           }
         });
         arraysOfContaingMax100Values.forEach(
           (eachArrayWith100Values, indexOfAllArraysOf100Values) => {
+            expressionTemp = '';
             eachArrayWith100Values.forEach((eachVal, indexOfCondition) => {
               const index =
-                (indexOfAllArraysOf100Values + 1) * indexOfCondition;
+                indexOfAllArraysOf100Values * 100 + indexOfCondition;
               expressionAttributeValues[
                 `${valueExpression}${index + 1}`
               ] = eachVal;

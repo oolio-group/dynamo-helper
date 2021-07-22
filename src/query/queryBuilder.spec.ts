@@ -9,6 +9,14 @@ type ProductModel = {
   barcode?: string;
 };
 
+const expressionForMoreThan100Values = () => {
+  const obj = {};
+  Array.from(Array(200).keys()).forEach(val => {
+    obj[`:id${val + 1}`] = val;
+  });
+  return obj;
+};
+
 const sampleCases = [
   {
     name: 'sk operations: between',
@@ -252,6 +260,35 @@ const sampleCases = [
         ':pk': 'xxxx',
         ':id1': 'yyyy',
         ':id2': 'zzzz',
+      },
+    },
+  },
+  {
+    name: 'filter conditions: includes for more than 100 ids',
+    filter: {
+      where: {
+        pk: 'xxxx',
+        id: {
+          inq: Array.from(Array(200).keys()),
+        },
+      },
+    },
+    expected: {
+      KeyConditionExpression: '#PK = :pk',
+      // FilterExpression: '#ID in (:id1, :id2)',
+      FilterExpression: `#ID in (${Array.from(Array(100).keys())
+        .map(x => `:id${x + 1}`)
+        .join(', ')}) AND OR #ID in (${Array.from(Array(200).keys())
+        .slice(100)
+        .map(x => `:id${x + 1}`)
+        .join(', ')})`,
+      ExpressionAttributeNames: {
+        '#PK': 'pk',
+        '#ID': 'id',
+      },
+      ExpressionAttributeValues: {
+        ':pk': 'xxxx',
+        ...expressionForMoreThan100Values(),
       },
     },
   },
