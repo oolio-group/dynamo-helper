@@ -166,16 +166,42 @@ function buildConditionExpressions<T extends object = AnyObject>(
         );
       } else if (operator === 'IN') {
         let expressionTemp = '';
+        const arraysOfContaingMax100Values = [];
+        let tempArray = [];
         condition.forEach((eachVal, index) => {
-          expressionAttributeValues[`${valueExpression}${index + 1}`] = eachVal;
-          if (!expressionTemp) {
-            expressionTemp = expressionTemp + `${valueExpression}${index + 1}`;
+          if ((index + 1) % 100 === 0) {
+            arraysOfContaingMax100Values.push(tempArray);
+            tempArray = [];
+          } else if (condition.length < 100 && index + 1 === condition.length) {
+            tempArray.push(eachVal);
+            arraysOfContaingMax100Values.push(tempArray);
           } else {
-            expressionTemp =
-              expressionTemp + `, ${valueExpression}${index + 1}`;
+            tempArray.push(eachVal);
           }
         });
-        filterExpression.push(`${keyName} in (${expressionTemp})`);
+        arraysOfContaingMax100Values.forEach(
+          (eachArrayWith100Values, indexOfAllArraysOf100Values) => {
+            eachArrayWith100Values.forEach((eachVal, indexOfCondition) => {
+              const index =
+                (indexOfAllArraysOf100Values + 1) * indexOfCondition;
+              expressionAttributeValues[
+                `${valueExpression}${index + 1}`
+              ] = eachVal;
+              if (!expressionTemp) {
+                expressionTemp =
+                  expressionTemp + `${valueExpression}${index + 1}`;
+              } else {
+                expressionTemp =
+                  expressionTemp + `, ${valueExpression}${index + 1}`;
+              }
+            });
+            if (indexOfAllArraysOf100Values === 0) {
+              filterExpression.push(`${keyName} in (${expressionTemp})`);
+            } else {
+              filterExpression.push(`OR ${keyName} in (${expressionTemp})`);
+            }
+          },
+        );
       } else if (operator === 'CONTAINS') {
         expressionAttributeValues[valueExpression] = condition;
         filterExpression.push(
