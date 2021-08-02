@@ -60,17 +60,6 @@ describe('queryWithCursor', () => {
     ).rejects.toThrowError('Partition key condition can only be a string');
   });
 
-  it('should throw an error when max limit is exceeded', async () => {
-    await expect(
-      query({
-        where: {
-          pk: 'product',
-        } as Where<{ pk: string }>,
-        limit: 51,
-      }),
-    ).rejects.toThrowError('Maximum limit of 50 can be applied');
-  });
-
   it('should throw an error when secret is not configured', async () => {
     const queryWithoutSk = queryWithCursor.bind(null, testClient, {
       ...testTableConf,
@@ -118,7 +107,7 @@ describe('queryWithCursor', () => {
       ExpressionAttributeValues: {
         ':sk': 'xxxx',
       },
-      Limit: 50,
+      Limit: 99999,
       ExclusiveStartKey: undefined,
     });
   });
@@ -307,26 +296,18 @@ describe('Pagination', () => {
     const result = await query({
       where: { pk: 'pk#products' },
     });
-    expect(testClient.query).toHaveBeenCalledTimes(1);
-    expect(result.items).toHaveLength(50);
-    expect(result.cursor).toBeDefined(); // because we querie with default limit and we know there are 150
-    expect(testClient.query).toHaveBeenNthCalledWith(1, {
-      TableName: testTableConf.name,
-      IndexName: 'default',
-      KeyConditionExpression: '#PK = :pk',
-      ExpressionAttributeNames: {
-        '#PK': 'pk',
-      },
-      ExpressionAttributeValues: {
-        ':pk': 'pk#products',
-      },
-      Limit: 50,
-      ExclusiveStartKey: undefined,
-    });
+    expect(testClient.query).toHaveBeenCalledTimes(2);
+    expect(result.items).toHaveLength(150);
+    expect(result.cursor).toBeUndefined(); // because we querie with default limit and we know there are 150
+    const mockValueOfQuery = testClient.query.mock.calls[0][0];
+    expect(mockValueOfQuery.KeyConditionExpression).toBe('#PK = :pk');
+    expect(mockValueOfQuery.TableName).toBe(testTableConf.name);
+    expect(mockValueOfQuery.Limit).toBe(99999);
+    expect(mockValueOfQuery.IndexName).toBe('default');
     expect(result.items).toStrictEqual(
-      ITEMS.filter(item => item.pk === 'pk#products')
-        .sort((a, b) => a.sk.localeCompare(b.sk))
-        .slice(0, 50),
+      ITEMS.filter(item => item.pk === 'pk#products').sort((a, b) =>
+        a.sk.localeCompare(b.sk),
+      ),
     );
   });
 
