@@ -3,6 +3,8 @@ import { decrypt, encrypt } from '../utils';
 import { AnyObject, Filter, TableConfig } from '../types';
 import { buildQueryTableParams } from './queryBuilder';
 
+const MAX_LIMIT = 99999;
+
 /**
  * Cursor based query which returns list of matching items and the last cursor position
  *
@@ -30,8 +32,8 @@ export async function queryWithCursor<T extends AnyObject>(
 
   const params = buildQueryTableParams(filter, partitionKeyName, sortKeyName);
 
-  if (!params.Limit) {
-    params.Limit = 99999;
+  if (!params?.Limit) {
+    params.Limit = MAX_LIMIT;
   }
 
   params.TableName = table.name;
