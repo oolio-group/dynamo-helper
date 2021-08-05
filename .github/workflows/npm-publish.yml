@@ -2,7 +2,7 @@ name: npm-publish
 on:
   push:
     branches:
-      - master
+      - sravan/publish-0.4.11
 jobs:
   npm-publish:
     name: npm-publish

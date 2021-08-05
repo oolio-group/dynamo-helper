@@ -3,7 +3,7 @@ name: github-publish
 on:
   workflow_dispatch:
   push:
-    branch:
+    branches:
       - sravan/publish-0.4.11
 
 jobs:
