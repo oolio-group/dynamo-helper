@@ -3,8 +3,8 @@ name: github-publish
 on:
   workflow_dispatch:
   push:
-    tags:
-      - 'v*.*.*'
+    branch:
+      - sravan/publish-0.4.11
 
 jobs:
   github-publish:
