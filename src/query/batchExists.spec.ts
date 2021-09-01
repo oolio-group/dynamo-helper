@@ -72,7 +72,7 @@ describe('batchExists', () => {
       };
     });
 
-    const keys = range(100).map((i: string) => ({
+    const keys = range(100).map((i: number) => ({
       pk: i + 'pk',
       sk: i + 'sk',
     }));
