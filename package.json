@@ -45,6 +45,7 @@
     "@babel/preset-typescript": "7.12.1",
     "@types/crypto-js": "^4.0.1",
     "@types/jest": "26.0.15",
+    "@types/lodash": "^4.14.172",
     "@typescript-eslint/eslint-plugin": "4.6.1",
     "@typescript-eslint/parser": "4.6.1",
     "babel-jest": "26.6.3",

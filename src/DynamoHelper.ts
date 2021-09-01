@@ -19,6 +19,7 @@ import { getItem } from './query/getItem';
 import { query } from './query/query';
 import { queryWithCursor } from './query/queryWithCursor';
 import { AnyObject, Filter, TableConfig } from './types';
+import { queryWithMultiIndex, Queries } from './query/queryWithMultiIndex';
 
 export class DynamoHelper {
   table: TableConfig;
@@ -50,6 +51,30 @@ export class DynamoHelper {
     indexName?: string,
   ): Promise<{ items: Array<T>; cursor?: string; scannedCount: number }> {
     return queryWithCursor(this.dbClient, this.table, filter, indexName);
+  }
+
+  /**
+   * the function queries on multiple indexes where matched/intersectional data will be returned in form of `1st query index data`
+   * along with last cursor position
+   *
+   * @param {Queries} queries array of query filter with index
+   * @param { QueryWithCursorOptions } options cursor, page size options
+   * @param {number} limit number of items
+   * @param {string} prevCursor starting cursor position
+   * @returns {Array<T>, string} list of matching items, last cursor position
+   */
+  async queryWithMultiIndex<T extends AnyObject>(
+    queries: Queries[],
+    limit?: number,
+    prevCursor?: string,
+  ): Promise<{ items: Array<T>; cursor?: string; scannedCount: number }> {
+    return queryWithMultiIndex(
+      this.dbClient,
+      this.table,
+      queries,
+      limit,
+      prevCursor,
+    );
   }
 
   async getItem<T extends AnyObject>(
