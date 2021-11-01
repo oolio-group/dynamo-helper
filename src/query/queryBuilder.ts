@@ -35,6 +35,8 @@ function keyOperatorLookup(operator: FilterOperators): DynamoDBOperators {
       return 'CONTAINS';
     case 'beginsWith':
       return 'BEGINS_WITH';
+    case 'exists':
+      return 'EXISTS';
     default:
       return '=';
   }
@@ -155,7 +157,13 @@ function buildConditionExpressions<T extends object = AnyObject>(
       const insideKey = Object.keys(condition)[0];
       condition = condition[insideKey];
       const operator = keyOperatorLookup(insideKey as FilterOperators);
-      if (operator === 'BETWEEN') {
+      if (operator === 'EXISTS') {
+        filterExpression.push(
+          condition
+            ? `attribute_exists(${keyName})`
+            : `attribute_not_exists(${keyName})`,
+        );
+      } else if (operator === 'BETWEEN') {
         // eslint-disable-next-line prefer-destructuring
         expressionAttributeValues[`${valueExpression}_start`] = condition[0];
         // eslint-disable-next-line prefer-destructuring
