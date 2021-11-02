@@ -367,6 +367,73 @@ const sampleCases = [
       },
     },
   },
+  {
+    name: 'filter conditions: neq',
+    filter: {
+      where: {
+        pk: 'xxxx',
+        id: {
+          neq: 'yyyy',
+        },
+      },
+    },
+    expected: {
+      KeyConditionExpression: '#PK = :pk',
+      FilterExpression: '#ID <> :id',
+      ExpressionAttributeNames: {
+        '#PK': 'pk',
+        '#ID': 'id',
+      },
+      ExpressionAttributeValues: {
+        ':pk': 'xxxx',
+        ':id': 'yyyy',
+      },
+    },
+  },
+  {
+    name: 'filter conditions: exists',
+    filter: {
+      where: {
+        pk: 'xxxx',
+        id: {
+          exists: true,
+        },
+      },
+    },
+    expected: {
+      KeyConditionExpression: '#PK = :pk',
+      FilterExpression: 'attribute_exists(#ID)',
+      ExpressionAttributeNames: {
+        '#PK': 'pk',
+        '#ID': 'id',
+      },
+      ExpressionAttributeValues: {
+        ':pk': 'xxxx',
+      },
+    },
+  },
+  {
+    name: 'filter conditions: not exists',
+    filter: {
+      where: {
+        pk: 'xxxx',
+        id: {
+          exists: false,
+        },
+      },
+    },
+    expected: {
+      KeyConditionExpression: '#PK = :pk',
+      FilterExpression: 'attribute_not_exists(#ID)',
+      ExpressionAttributeNames: {
+        '#PK': 'pk',
+        '#ID': 'id',
+      },
+      ExpressionAttributeValues: {
+        ':pk': 'xxxx',
+      },
+    },
+  },
 ];
 
 describe('Query Builder', () => {
