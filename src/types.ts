@@ -23,6 +23,7 @@ export type DynamoDBOperators =
   | 'BETWEEN'
   | 'BEGINS_WITH'
   | 'IN'
+  | 'EXISTS'
   | 'CONTAINS';
 
 /**
@@ -38,6 +39,7 @@ export type FilterOperators =
   | 'inq'
   | 'between'
   | 'like'
+  | 'exists'
   | 'beginsWith';
 /**
  * Matching predicate comparison
