@@ -45,6 +45,7 @@ export async function queryWithCursor<T extends AnyObject>(
     table.cursorSecret,
   );
 
+  const originalLimit = params.Limit;
   let items = [];
   let totalScannedCount = 0;
   let output: QueryOutput = {};
@@ -53,12 +54,15 @@ export async function queryWithCursor<T extends AnyObject>(
     if (output.LastEvaluatedKey) {
       params.ExclusiveStartKey = output.LastEvaluatedKey;
     }
+    if (items.length) {
+      params.Limit = originalLimit - items.length;
+    }
 
     output = await dbClient.query(params).promise();
     totalScannedCount += output.ScannedCount;
 
     items = items.concat(output.Items);
-  } while (output.LastEvaluatedKey && !(items.length >= params.Limit));
+  } while (output.LastEvaluatedKey && !(items.length >= originalLimit));
 
   return {
     items: items as T[],
