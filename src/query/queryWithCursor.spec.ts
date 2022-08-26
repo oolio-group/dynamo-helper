@@ -302,7 +302,6 @@ describe('Pagination', () => {
     const mockValueOfQuery = testClient.query.mock.calls[0][0];
     expect(mockValueOfQuery.KeyConditionExpression).toBe('#PK = :pk');
     expect(mockValueOfQuery.TableName).toBe(testTableConf.name);
-    expect(mockValueOfQuery.Limit).toBe(99999);
     expect(mockValueOfQuery.IndexName).toBe('default');
     expect(result.items).toStrictEqual(
       ITEMS.filter(item => item.pk === 'pk#products').sort((a, b) =>
@@ -466,5 +465,61 @@ describe('Pagination', () => {
     expect(result.items).toStrictEqual(
       orders.filter(item => item.createdBy === 'Gru').slice(0, 3),
     );
+  });
+
+  test('with different limit for subsequent query if first result does not fulfill the limit', async () => {
+    mockQuery = jest
+      .spyOn(testClient, 'query')
+      .mockImplementationOnce((params: QueryInput) => {
+        // first call return limit - 2 result
+        const dynamodDB = new DynamoDBPaginateQueryMockImpl();
+        const items = dynamodDB
+          .partition(params)
+          .sort(params)
+          .pick(params, params.Limit - 2)
+          .filter(params).records;
+
+        return {
+          promise: jest.fn().mockImplementation(() => {
+            return Promise.resolve({
+              Items: (items as unknown) as ItemList,
+              LastEvaluatedKey: dynamodDB.lastEvaluatedKey,
+              ScannedCount: TOTAL_RECORDS,
+            } as QueryOutput);
+          }),
+        };
+      })
+      .mockImplementationOnce((params: QueryInput) => {
+        // second call should return what is left
+        const dynamodDB = new DynamoDBPaginateQueryMockImpl();
+        const items = dynamodDB
+          .partition(params)
+          .sort(params)
+          .pick(params, params.Limit)
+          .filter(params).records;
+
+        return {
+          promise: jest.fn().mockImplementation(() => {
+            return Promise.resolve({
+              Items: (items as unknown) as ItemList,
+              LastEvaluatedKey: dynamodDB.lastEvaluatedKey,
+              ScannedCount: TOTAL_RECORDS,
+            } as QueryOutput);
+          }),
+        };
+      });
+
+    const result = await query({
+      where: {
+        pk: 'pk#products',
+      },
+      limit: 5,
+    });
+    expect(testClient.query).toHaveBeenCalledTimes(2);
+    expect(result.items).toHaveLength(5);
+    expect(typeof result.cursor).toBe('string');
+    const mockValueOfQuery = testClient.query.mock.calls[1][0];
+    expect(mockValueOfQuery.Limit).toBe(2);
+    expect(mockValueOfQuery.ExclusiveStartKey).toBeDefined();
   });
 });
