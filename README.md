@@ -408,6 +408,70 @@ if (result.length === 0) {
 }
 ```
 
+### updateItem
+
+Supports updating item conditionally using [Conditional writes](https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/WorkingWithItems.html#WorkingWithItems.ConditionalUpdate)
+
+```typescript
+import {
+  updateItem,
+  ConditionExpressionInput,
+} from '@hitz-group/dynamo-helper';
+
+const where = {
+  pk: 'product_123',
+};
+
+const conditions: ConditionExpressionInput = [
+  {
+    key: 'Price',
+    comparator: 'gt',
+    value: 50,
+  },
+  {
+    andOr: 'AND',
+  },
+  {
+    key: 'Quantity',
+    comparator: 'lt',
+    value: 20,
+  },
+  {
+    andOr: 'OR',
+  },
+  {
+    key: 'IsPromotionalProduct',
+    comparator: 'eq',
+    value: true,
+  },
+  {
+    andOr: 'OR',
+  },
+  {
+    key: 'color',
+    comparator: 'like',
+    value: 'red',
+  },
+  {
+    andOr: 'AND',
+  },
+  {
+    key: 'createdAt',
+    comparator: 'between',
+    value: [1670803200000, 1674586168676],
+  },
+];
+
+const prevPrice = 3000;
+const prevSales = 2;
+const updates = {
+  price: prevPrice - 100,
+  salesCount: prevSales + 1,
+};
+
+updateItem(where, conditions, updates);
+```
+
 ## TODO
 
 - [ ] Scan operation support
