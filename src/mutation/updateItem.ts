@@ -78,7 +78,7 @@ export async function updateItem<T extends AnyObject>(
   key: DocumentClient.Key,
   conditions: ConditionExpressionInput,
   item: T,
-): Promise<PromiseResult<DocumentClient.PutItemOutput, AWSError>> {
+): Promise<PromiseResult<DocumentClient.UpdateItemOutput, AWSError>> {
   if (!key || typeof key !== 'object' || Object.keys(key).length === 0) {
     throw new Error('Expected key to be of type object and not empty');
   }

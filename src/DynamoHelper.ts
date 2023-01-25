@@ -5,6 +5,7 @@ import {
   DocumentClient,
   PutItemOutput,
   TransactWriteItemsOutput,
+  UpdateItemOutput,
 } from 'aws-sdk/clients/dynamodb';
 import { PromiseResult } from 'aws-sdk/lib/request';
 import { batchDeleteItems } from './mutation/batchDeleteItems';
@@ -112,7 +113,7 @@ export class DynamoHelper {
     key: DocumentClient.Key,
     item: T,
     conditions: ConditionExpressionInput,
-  ): Promise<PromiseResult<PutItemOutput, AWSError>> {
+  ): Promise<PromiseResult<UpdateItemOutput, AWSError>> {
     return updateItem(this.dbClient, this.table, key, conditions, item);
   }
 }
