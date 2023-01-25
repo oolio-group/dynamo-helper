@@ -13,14 +13,19 @@ import { batchPutItems } from './mutation/batchPutItems';
 import { deleteItem } from './mutation/deleteItem';
 import { putItem } from './mutation/putItem';
 import { transactPutItems } from './mutation/transactPutItems';
-import { ConditionExpressionInput, updateItem } from './mutation/updateItem';
+import { updateItem } from './mutation/updateItem';
 import { batchExists } from './query/batchExists';
 import { batchGetItems } from './query/batchGetItems';
 import { exists } from './query/exists';
 import { getItem } from './query/getItem';
 import { query } from './query/query';
 import { queryWithCursor } from './query/queryWithCursor';
-import { AnyObject, Filter, TableConfig } from './types';
+import {
+  AnyObject,
+  ConditionExpressionInput,
+  Filter,
+  TableConfig,
+} from './types';
 
 export class DynamoHelper {
   table: TableConfig;
@@ -112,7 +117,7 @@ export class DynamoHelper {
   async updateItem<T extends AnyObject>(
     key: DocumentClient.Key,
     item: T,
-    conditions: ConditionExpressionInput,
+    conditions: ConditionExpressionInput[],
   ): Promise<PromiseResult<UpdateItemOutput, AWSError>> {
     return updateItem(this.dbClient, this.table, key, conditions, item);
   }

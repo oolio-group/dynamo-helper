@@ -1,5 +1,6 @@
 import { testClient, testTableConf } from '../testUtils';
 import { updateItem as conditionalUpdateItem } from './updateItem';
+import { ConditionExpressionInput, ConditionExpressionKind } from '../types';
 
 describe('updateItem', () => {
   const updateItem = conditionalUpdateItem.bind(
@@ -20,12 +21,27 @@ describe('updateItem', () => {
     const key = { pk: 'user_123' };
 
     // conditions to match
-    const conditions = [
-      { key: 'id', comparator: 'eq', value: '123' },
-      { andOr: 'OR' },
-      { key: 'name', comparator: 'eq', value: 'Gru' },
-      { andOr: 'AND' },
-      { key: 'age', comparator: 'gt', value: 20 },
+    const conditions: ConditionExpressionInput[] = [
+      {
+        kind: ConditionExpressionKind.Comparison,
+        key: 'id',
+        comparator: 'eq',
+        value: '123',
+      },
+      { kind: ConditionExpressionKind.AndOr, value: 'OR' },
+      {
+        kind: ConditionExpressionKind.Comparison,
+        key: 'name',
+        comparator: 'eq',
+        value: 'Gru',
+      },
+      { kind: ConditionExpressionKind.AndOr, value: 'AND' },
+      {
+        kind: ConditionExpressionKind.Comparison,
+        key: 'age',
+        comparator: 'gt',
+        value: 20,
+      },
     ];
 
     const attributesToUpdate = { name: 'Dru', age: 30 };
@@ -54,12 +70,27 @@ describe('updateItem', () => {
     });
 
     const key = { pk: 'user_123' };
-    const conditions = [
-      { key: 'id', comparator: 'eq', value: '123' },
-      { andOr: 'OR' },
-      { key: 'name', comparator: 'eq', value: 'Gru' },
-      { andOr: 'AND' },
-      { key: 'age', comparator: 'gt', value: 20 },
+    const conditions: ConditionExpressionInput[] = [
+      {
+        kind: ConditionExpressionKind.Comparison,
+        key: 'id',
+        comparator: 'eq',
+        value: '123',
+      },
+      { kind: ConditionExpressionKind.AndOr, value: 'OR' },
+      {
+        kind: ConditionExpressionKind.Comparison,
+        key: 'name',
+        comparator: 'eq',
+        value: 'Gru',
+      },
+      { kind: ConditionExpressionKind.AndOr, value: 'AND' },
+      {
+        kind: ConditionExpressionKind.Comparison,
+        key: 'age',
+        comparator: 'gt',
+        value: 20,
+      },
     ];
     const attributesToUpdate = { name: 'Dru', age: 30 };
 
@@ -73,10 +104,27 @@ describe('updateItem', () => {
 
   it('should throw error when key is missing or invalid', async () => {
     const item = { id: '456', name: 'Bob', age: 25 };
-    const conditions = [
-      { key: 'id', comparator: 'eq', value: '123' },
-      { key: 'name', comparator: 'eq', value: 'Kevin' },
-      { key: 'age', comparator: 'gt', value: 20 },
+    const conditions: ConditionExpressionInput[] = [
+      {
+        kind: ConditionExpressionKind.Comparison,
+        key: 'id',
+        comparator: 'eq',
+        value: '123',
+      },
+      { kind: ConditionExpressionKind.AndOr, value: 'OR' },
+      {
+        kind: ConditionExpressionKind.Comparison,
+        key: 'name',
+        comparator: 'eq',
+        value: 'Kevin',
+      },
+      { kind: ConditionExpressionKind.AndOr, value: 'OR' },
+      {
+        kind: ConditionExpressionKind.Comparison,
+        key: 'age',
+        comparator: 'gt',
+        value: 20,
+      },
     ];
 
     let error;
@@ -98,12 +146,27 @@ describe('updateItem', () => {
     });
 
     const key = { pk: 'user_123' };
-    const conditions = [
-      { key: 'id', comparator: 'eq', value: '123' },
-      { andOr: 'OR' },
-      { key: 'name', comparator: 'eq', value: 'Gru' },
-      { andOr: 'AND' },
-      { key: 'age', comparator: 'gt', value: 20 },
+    const conditions: ConditionExpressionInput[] = [
+      {
+        kind: ConditionExpressionKind.Comparison,
+        key: 'id',
+        comparator: 'eq',
+        value: '123',
+      },
+      { kind: ConditionExpressionKind.AndOr, value: 'OR' },
+      {
+        kind: ConditionExpressionKind.Comparison,
+        key: 'name',
+        comparator: 'eq',
+        value: 'Gru',
+      },
+      { kind: ConditionExpressionKind.AndOr, value: 'AND' },
+      {
+        kind: ConditionExpressionKind.Comparison,
+        key: 'age',
+        comparator: 'gt',
+        value: 20,
+      },
     ];
     const attributesToUpdate = { name: 'Dru', age: 30 };
 

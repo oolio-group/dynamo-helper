@@ -422,40 +422,49 @@ const where = {
   pk: 'product_123',
 };
 
-const conditions: ConditionExpressionInput = [
+const conditions: ConditionExpressionInput[] = [
   {
+    kind: ConditionExpressionKind.Comparison,
     key: 'Price',
     comparator: 'gt',
     value: 50,
   },
   {
-    andOr: 'AND',
+    kind: ConditionExpressionKind.AndOr,
+    value: 'AND',
   },
   {
+    kind: ConditionExpressionKind.Comparison,
     key: 'Quantity',
     comparator: 'lt',
     value: 20,
   },
   {
-    andOr: 'OR',
+    kind: ConditionExpressionKind.AndOr,
+    value: 'OR',
   },
   {
+    kind: ConditionExpressionKind.Comparison,
     key: 'IsPromotionalProduct',
     comparator: 'eq',
     value: true,
   },
   {
-    andOr: 'OR',
+    kind: ConditionExpressionKind.AndOr,
+    value: 'OR',
   },
   {
+    kind: ConditionExpressionKind.Comparison,
     key: 'color',
     comparator: 'like',
     value: 'red',
   },
   {
-    andOr: 'AND',
+    kind: ConditionExpressionKind.AndOr,
+    value: 'AND',
   },
   {
+    kind: ConditionExpressionKind.Comparison,
     key: 'createdAt',
     comparator: 'between',
     value: [1670803200000, 1674586168676],
