@@ -408,6 +408,79 @@ if (result.length === 0) {
 }
 ```
 
+### updateItem
+
+Supports updating item conditionally using [Conditional writes](https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/WorkingWithItems.html#WorkingWithItems.ConditionalUpdate)
+
+```typescript
+import {
+  updateItem,
+  ConditionExpressionInput,
+} from '@hitz-group/dynamo-helper';
+
+const where = {
+  pk: 'product_123',
+};
+
+const conditions: ConditionExpressionInput[] = [
+  {
+    kind: ConditionExpressionKind.Comparison,
+    key: 'Price',
+    comparator: 'gt',
+    value: 50,
+  },
+  {
+    kind: ConditionExpressionKind.AndOr,
+    value: 'AND',
+  },
+  {
+    kind: ConditionExpressionKind.Comparison,
+    key: 'Quantity',
+    comparator: 'lt',
+    value: 20,
+  },
+  {
+    kind: ConditionExpressionKind.AndOr,
+    value: 'OR',
+  },
+  {
+    kind: ConditionExpressionKind.Comparison,
+    key: 'IsPromotionalProduct',
+    comparator: 'eq',
+    value: true,
+  },
+  {
+    kind: ConditionExpressionKind.AndOr,
+    value: 'OR',
+  },
+  {
+    kind: ConditionExpressionKind.Comparison,
+    key: 'color',
+    comparator: 'like',
+    value: 'red',
+  },
+  {
+    kind: ConditionExpressionKind.AndOr,
+    value: 'AND',
+  },
+  {
+    kind: ConditionExpressionKind.Comparison,
+    key: 'createdAt',
+    comparator: 'between',
+    value: [1670803200000, 1674586168676],
+  },
+];
+
+const prevPrice = 3000;
+const prevSales = 2;
+const updates = {
+  price: prevPrice - 100,
+  salesCount: prevSales + 1,
+};
+
+updateItem(where, conditions, updates);
+```
+
 ## TODO
 
 - [ ] Scan operation support

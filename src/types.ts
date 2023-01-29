@@ -1,4 +1,5 @@
 import { DynamoDB } from 'aws-sdk';
+import { DocumentClient } from 'aws-sdk/clients/dynamodb';
 
 /**
  * Objects with open properties
@@ -186,4 +187,30 @@ export interface TableConfig {
    */
   indexes: { default: TableIndex } & Record<string, TableIndex>;
   cursorSecret?: string; // used to mask the lastEvaluatedKey in query result
+}
+
+export enum ConditionExpressionKind {
+  Comparison = 'comparison',
+  AndOr = 'AND_OR',
+}
+
+type ConditionExpressionItem = {
+  kind: ConditionExpressionKind.Comparison;
+  key: string;
+  comparator: FilterOperators;
+  value: string | number | boolean | Array<number>;
+};
+
+type AndOrExpression = {
+  kind: ConditionExpressionKind.AndOr;
+  value: 'AND' | 'OR';
+};
+
+export type ConditionExpressionInput =
+  | ConditionExpressionItem
+  | AndOrExpression;
+
+export interface ConditionExpressionReturn {
+  expression: DocumentClient.ConditionExpression;
+  attrValues: DocumentClient.ExpressionAttributeValueMap;
 }

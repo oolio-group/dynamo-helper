@@ -7,7 +7,7 @@
     "dynamo",
     "nosql"
   ],
-  "version": "0.4.15",
+  "version": "0.5.15",
   "files": [
     "lib",
     "LICENSE",

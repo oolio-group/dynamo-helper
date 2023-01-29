@@ -13,7 +13,9 @@ import {
  * @param operator to lookup
  * @returns {DynamoDBOperators} dynamo db operator
  */
-function keyOperatorLookup(operator: FilterOperators): DynamoDBOperators {
+export function keyOperatorLookup(
+  operator: FilterOperators,
+): DynamoDBOperators {
   switch (operator) {
     case 'eq':
       return '=';
