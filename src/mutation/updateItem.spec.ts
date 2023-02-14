@@ -26,7 +26,7 @@ describe('updateItem', () => {
         kind: ConditionExpressionKind.Comparison,
         key: 'id',
         comparator: 'eq',
-        value: '123',
+        value: 123,
       },
       { kind: ConditionExpressionKind.AndOr, value: 'OR' },
       {
@@ -52,12 +52,14 @@ describe('updateItem', () => {
         'id undefined :val0 OR name undefined :val2 AND age undefined :val4',
       ExpressionAttributeValues: {
         ':val0': { N: '123' },
-        ':val2': { N: 'Gru' },
+        ':val2': { S: 'Gru' },
         ':val4': { N: '20' },
+        ':name': { S: 'Dru' },
+        ':age': { N: '30' },
       },
       Key: { pk: 'user_123' },
       TableName: 'sample-table',
-      UpdateExpression: 'SET name = :Dru, age = :30',
+      UpdateExpression: 'SET name = :name, age = :age',
     });
   });
 

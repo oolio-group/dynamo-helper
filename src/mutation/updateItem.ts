@@ -9,6 +9,7 @@ import {
 import { keyOperatorLookup } from '../query/queryBuilder';
 import { PromiseResult } from 'aws-sdk/lib/request';
 import { AWSError } from 'aws-sdk';
+import { marshall } from '@aws-sdk/util-dynamodb';
 
 const buildConditionExpressions = (
   conditionExpression: ConditionExpressionInput[],
@@ -32,15 +33,30 @@ const buildConditionExpressions = (
       const operator = keyOperatorLookup[comparator];
       if (operator === 'BETWEEN') {
         expression += `${key} ${operator} :val${i}_1 AND :val${i}_2`;
-        attrValues[`:val${i}_1`] = { N: value[0].toString() };
-        attrValues[`:val${i}_2`] = { N: value[1].toString() };
+        attrValues[`:val${i}_1`] = marshall(value[0]);
+        attrValues[`:val${i}_2`] = marshall(value[1]);
       } else {
         expression += `${key} ${operator} :val${i}`;
-        attrValues[`:val${i}`] = { N: value.toString() };
+        attrValues[`:val${i}`] = marshall(value);
       }
     }
   }
   return { expression, attrValues };
+};
+
+const buildUpdateExpressions = (item: object) => {
+  const expressions = [];
+  const expressionValues = {};
+
+  Object.keys(item)?.forEach(key => {
+    expressions.push(`${key} = :${key}`);
+    expressionValues[`:${key}`] = marshall(item[key]); // convert to dynamoDB object
+  });
+
+  return {
+    updateExpressionString: `SET ${expressions.join(', ')}`,
+    updateExpressionValues: expressionValues,
+  };
 };
 
 /**
@@ -66,16 +82,19 @@ export async function updateItem<T extends AnyObject>(
 
   const { expression, attrValues } = buildConditionExpressions(conditions);
 
-  const updateExpressionString = Object.keys(item)
-    .map(attribute => `${attribute} = :${item[attribute]}`)
-    .join(', ');
+  const {
+    updateExpressionString,
+    updateExpressionValues,
+  } = buildUpdateExpressions(item);
 
   const params: DocumentClient.UpdateItemInput = {
     TableName: table.name,
     Key: key,
-    UpdateExpression: `SET ${updateExpressionString}`,
     ConditionExpression: expression,
-    ExpressionAttributeValues: attrValues,
+    UpdateExpression: updateExpressionString,
+    ExpressionAttributeValues:
+      // merge condition and update expressions' values
+      Object.assign({}, attrValues, updateExpressionValues),
   };
 
   return dbClient.update(params).promise();
