@@ -68,7 +68,7 @@ describe('updateItem', () => {
       },
       Key: { pk: 'user_123' },
       TableName: 'sample-table',
-      UpdateExpression: 'SET name = :name, age = :age',
+      UpdateExpression: 'SET name = :val_name, age = :val_age',
     });
   });
 
