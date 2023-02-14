@@ -30,7 +30,7 @@ const buildConditionExpressions = (
       const value = currentExpression.value;
 
       if (!comparator) continue;
-      const operator = keyOperatorLookup[comparator];
+      const operator = keyOperatorLookup(comparator);
       if (operator === 'BETWEEN') {
         expression += `${key} ${operator} :val${i}_1 AND :val${i}_2`;
         attrValues[`:val${i}_1`] = marshall(value[0]);

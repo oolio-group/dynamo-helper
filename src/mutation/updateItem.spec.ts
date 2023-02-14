@@ -42,6 +42,13 @@ describe('updateItem', () => {
         comparator: 'gt',
         value: 20,
       },
+      { kind: ConditionExpressionKind.AndOr, value: 'AND' },
+      {
+        kind: ConditionExpressionKind.Comparison,
+        key: 'age',
+        comparator: 'between',
+        value: [20, 30],
+      },
     ];
 
     const attributesToUpdate = { name: 'Dru', age: 30 };
@@ -49,11 +56,13 @@ describe('updateItem', () => {
 
     expect(spy).toHaveBeenCalledWith({
       ConditionExpression:
-        'id undefined :val0 OR name undefined :val2 AND age undefined :val4',
+        'id = :val0 OR name = :val2 AND age > :val4 AND age BETWEEN :val6_1 AND :val6_2',
       ExpressionAttributeValues: {
         ':val0': { N: '123' },
         ':val2': { S: 'Gru' },
         ':val4': { N: '20' },
+        ':val6_1': { N: '20' },
+        ':val6_2': { N: '30' },
         ':name': { S: 'Dru' },
         ':age': { N: '30' },
       },
