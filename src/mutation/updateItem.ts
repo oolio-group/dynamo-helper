@@ -49,8 +49,8 @@ const buildUpdateExpressions = (item: object) => {
   const expressionValues = {};
 
   Object.keys(item)?.forEach(key => {
-    expressions.push(`${key} = :${key}`);
-    expressionValues[`:${key}`] = marshall(item[key]); // convert to dynamoDB object
+    expressions.push(`${key} = :val_${key}`);
+    expressionValues[`:val_${key}`] = marshall(item[key]); // convert to dynamoDB object
   });
 
   return {
