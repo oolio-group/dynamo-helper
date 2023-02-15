@@ -9,7 +9,6 @@ import {
 import { keyOperatorLookup } from '../query/queryBuilder';
 import { PromiseResult } from 'aws-sdk/lib/request';
 import { AWSError } from 'aws-sdk';
-import { marshall } from '@aws-sdk/util-dynamodb';
 
 const buildConditionExpressions = (
   conditionExpression: ConditionExpressionInput[],
@@ -33,11 +32,11 @@ const buildConditionExpressions = (
       const operator = keyOperatorLookup(comparator);
       if (operator === 'BETWEEN') {
         expression += `${key} ${operator} :val${i}_1 AND :val${i}_2`;
-        attrValues[`:val${i}_1`] = marshall(value[0]);
-        attrValues[`:val${i}_2`] = marshall(value[1]);
+        attrValues[`:val${i}_1`] = value[0];
+        attrValues[`:val${i}_2`] = value[1];
       } else {
         expression += `${key} ${operator} :val${i}`;
-        attrValues[`:val${i}`] = marshall(value);
+        attrValues[`:val${i}`] = value;
       }
     }
   }
@@ -47,15 +46,18 @@ const buildConditionExpressions = (
 const buildUpdateExpressions = (item: object) => {
   const expressions = [];
   const expressionValues = {};
+  const expressionNames = {};
 
   Object.keys(item)?.forEach(key => {
-    expressions.push(`${key} = :val_${key}`);
-    expressionValues[`:val_${key}`] = marshall(item[key]); // convert to dynamoDB object
+    expressions.push(`#key_${key} = :val_${key}`);
+    expressionNames[`#key_${key}`] = key;
+    expressionValues[`:val_${key}`] = item[key]; // convert to dynamoDB object
   });
 
   return {
-    updateExpressionString: `SET ${expressions.join(', ')}`,
-    updateExpressionValues: expressionValues,
+    expression: `SET ${expressions.join(', ')}`,
+    values: expressionValues,
+    names: expressionNames,
   };
 };
 
@@ -80,22 +82,26 @@ export async function updateItem<T extends AnyObject>(
     throw new Error('Expected key to be of type object and not empty');
   }
 
-  const { expression, attrValues } = buildConditionExpressions(conditions);
+  const conditionExpr = buildConditionExpressions(conditions);
 
-  const {
-    updateExpressionString,
-    updateExpressionValues,
-  } = buildUpdateExpressions(item);
+  // exclude table keys from update expression
+  const obj = Object.assign({}, item);
+  delete obj[table.indexes.default.partitionKeyName];
+  delete obj[table.indexes.default.sortKeyName];
+  const updateExpr = buildUpdateExpressions(obj);
 
   const params: DocumentClient.UpdateItemInput = {
     TableName: table.name,
     Key: key,
-    ConditionExpression: expression,
-    UpdateExpression: updateExpressionString,
+    ConditionExpression: conditionExpr.expression,
+    UpdateExpression: updateExpr.expression,
+    ExpressionAttributeNames: updateExpr.names,
     ExpressionAttributeValues:
       // merge condition and update expressions' values
-      Object.assign({}, attrValues, updateExpressionValues),
+      Object.assign({}, conditionExpr.attrValues, updateExpr.values),
   };
+
+  console.log('params ==> ', JSON.stringify(params, null, 2));
 
   return dbClient.update(params).promise();
 }
