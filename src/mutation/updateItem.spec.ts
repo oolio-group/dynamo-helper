@@ -26,7 +26,7 @@ describe('updateItem', () => {
         kind: ConditionExpressionKind.Comparison,
         key: 'id',
         comparator: 'eq',
-        value: '123',
+        value: 123,
       },
       { kind: ConditionExpressionKind.AndOr, value: 'OR' },
       {
@@ -42,6 +42,13 @@ describe('updateItem', () => {
         comparator: 'gt',
         value: 20,
       },
+      { kind: ConditionExpressionKind.AndOr, value: 'AND' },
+      {
+        kind: ConditionExpressionKind.Comparison,
+        key: 'age',
+        comparator: 'between',
+        value: [20, 30],
+      },
     ];
 
     const attributesToUpdate = { name: 'Dru', age: 30 };
@@ -49,15 +56,24 @@ describe('updateItem', () => {
 
     expect(spy).toHaveBeenCalledWith({
       ConditionExpression:
-        'id undefined :val0 OR name undefined :val2 AND age undefined :val4',
+        '#key_id = :val0 OR #key_name = :val2 AND #key_age > :val4 AND #key_age BETWEEN :val6_1 AND :val6_2',
       ExpressionAttributeValues: {
-        ':val0': { N: '123' },
-        ':val2': { N: 'Gru' },
-        ':val4': { N: '20' },
+        ':val0': 123,
+        ':val2': 'Gru',
+        ':val4': 20,
+        ':val6_1': 20,
+        ':val6_2': 30,
+        ':val_name': 'Dru',
+        ':val_age': 30,
+      },
+      ExpressionAttributeNames: {
+        '#key_age': 'age',
+        '#key_name': 'name',
+        '#key_id': 'id',
       },
       Key: { pk: 'user_123' },
       TableName: 'sample-table',
-      UpdateExpression: 'SET name = :Dru, age = :30',
+      UpdateExpression: 'SET #key_name = :val_name, #key_age = :val_age',
     });
   });
 

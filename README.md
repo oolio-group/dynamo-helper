@@ -500,5 +500,4 @@ Follow these steps to publish package to npm whenever a new version is available
 - Step 1: Create a new publish branch
 - Step 2: Change package version in `package.json` to whatever version that fits (Eg: 0.4.14)
 - Step 3: Commit the change with commit message as `Release <version number>` (Eg: `Release 0.4.14`)
-- Step 4: Create a tag with version number as name `git tag -a 'v<version number>' -m 'v<version number>'` (Eg: `git tag -a 'v0.4.14' -m 'v0.4.14'`)
-- Step 5: Push all the changes and create a PR for the release
+- Step 4: Push all the changes and create a PR for the release

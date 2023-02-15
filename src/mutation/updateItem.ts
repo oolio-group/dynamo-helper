@@ -15,6 +15,7 @@ const buildConditionExpressions = (
 ): ConditionExpressionReturn => {
   let expression = '';
   const attrValues: DocumentClient.ExpressionAttributeValueMap = {};
+  const attrNames: DocumentClient.ExpressionAttributeNameMap = {};
   for (let i = 0; i < conditionExpression.length; i++) {
     const currentExpression = conditionExpression[i];
     if (currentExpression.kind === ConditionExpressionKind.AndOr) {
@@ -29,18 +30,39 @@ const buildConditionExpressions = (
       const value = currentExpression.value;
 
       if (!comparator) continue;
-      const operator = keyOperatorLookup[comparator];
+      const operator = keyOperatorLookup(comparator);
+      const expressionName = `#key_${key}`;
+      attrNames[expressionName] = key;
+
       if (operator === 'BETWEEN') {
-        expression += `${key} ${operator} :val${i}_1 AND :val${i}_2`;
-        attrValues[`:val${i}_1`] = { N: value[0].toString() };
-        attrValues[`:val${i}_2`] = { N: value[1].toString() };
+        expression += `${expressionName} ${operator} :val${i}_1 AND :val${i}_2`;
+        attrValues[`:val${i}_1`] = value[0];
+        attrValues[`:val${i}_2`] = value[1];
       } else {
-        expression += `${key} ${operator} :val${i}`;
-        attrValues[`:val${i}`] = { N: value.toString() };
+        expression += `${expressionName} ${operator} :val${i}`;
+        attrValues[`:val${i}`] = value;
       }
     }
   }
-  return { expression, attrValues };
+  return { expression, attrValues, attrNames };
+};
+
+const buildUpdateExpressions = (item: object): ConditionExpressionReturn => {
+  const expressions = [];
+  const expressionValues = {};
+  const expressionNames = {};
+
+  Object.keys(item)?.forEach(key => {
+    expressions.push(`#key_${key} = :val_${key}`);
+    expressionNames[`#key_${key}`] = key;
+    expressionValues[`:val_${key}`] = item[key];
+  });
+
+  return {
+    expression: `SET ${expressions.join(', ')}`,
+    attrValues: expressionValues,
+    attrNames: expressionNames,
+  };
 };
 
 /**
@@ -64,18 +86,25 @@ export async function updateItem<T extends AnyObject>(
     throw new Error('Expected key to be of type object and not empty');
   }
 
-  const { expression, attrValues } = buildConditionExpressions(conditions);
+  const conditionExpr = buildConditionExpressions(conditions);
 
-  const updateExpressionString = Object.keys(item)
-    .map(attribute => `${attribute} = :${item[attribute]}`)
-    .join(', ');
+  // exclude table keys from update expression
+  const obj = Object.assign({}, item);
+  delete obj[table.indexes.default.partitionKeyName];
+  delete obj[table.indexes.default.sortKeyName];
+  const updateExpr = buildUpdateExpressions(obj);
 
   const params: DocumentClient.UpdateItemInput = {
     TableName: table.name,
     Key: key,
-    UpdateExpression: `SET ${updateExpressionString}`,
-    ConditionExpression: expression,
-    ExpressionAttributeValues: attrValues,
+    ConditionExpression: conditionExpr.expression,
+    UpdateExpression: updateExpr.expression,
+    ExpressionAttributeNames:
+      // merge condition and update expressions' names
+      Object.assign({}, conditionExpr.attrNames, updateExpr.attrNames),
+    ExpressionAttributeValues:
+      // merge condition and update expressions' values
+      Object.assign({}, conditionExpr.attrValues, updateExpr.attrValues),
   };
 
   return dbClient.update(params).promise();
