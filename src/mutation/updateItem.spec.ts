@@ -56,19 +56,24 @@ describe('updateItem', () => {
 
     expect(spy).toHaveBeenCalledWith({
       ConditionExpression:
-        'id = :val0 OR name = :val2 AND age > :val4 AND age BETWEEN :val6_1 AND :val6_2',
+        '#key_id = :val0 OR #key_name = :val2 AND #key_age > :val4 AND #key_age BETWEEN :val6_1 AND :val6_2',
       ExpressionAttributeValues: {
-        ':val0': { N: '123' },
-        ':val2': { S: 'Gru' },
-        ':val4': { N: '20' },
-        ':val6_1': { N: '20' },
-        ':val6_2': { N: '30' },
-        ':val_name': { S: 'Dru' },
-        ':val_age': { N: '30' },
+        ':val0': 123,
+        ':val2': 'Gru',
+        ':val4': 20,
+        ':val6_1': 20,
+        ':val6_2': 30,
+        ':val_name': 'Dru',
+        ':val_age': 30,
+      },
+      ExpressionAttributeNames: {
+        '#key_age': 'age',
+        '#key_name': 'name',
+        '#key_id': 'id',
       },
       Key: { pk: 'user_123' },
       TableName: 'sample-table',
-      UpdateExpression: 'SET name = :val_name, age = :val_age',
+      UpdateExpression: 'SET #key_name = :val_name, #key_age = :val_age',
     });
   });
 
