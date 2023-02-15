@@ -107,7 +107,5 @@ export async function updateItem<T extends AnyObject>(
       Object.assign({}, conditionExpr.attrValues, updateExpr.values),
   };
 
-  console.log('params ==> ', JSON.stringify(params, null, 2));
-
   return dbClient.update(params).promise();
 }
