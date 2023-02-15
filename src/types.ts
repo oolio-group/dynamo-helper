@@ -213,4 +213,5 @@ export type ConditionExpressionInput =
 export interface ConditionExpressionReturn {
   expression: DocumentClient.ConditionExpression;
   attrValues: DocumentClient.ExpressionAttributeValueMap;
+  attrNames: DocumentClient.ExpressionAttributeNameMap;
 }

@@ -15,6 +15,7 @@ const buildConditionExpressions = (
 ): ConditionExpressionReturn => {
   let expression = '';
   const attrValues: DocumentClient.ExpressionAttributeValueMap = {};
+  const attrNames: DocumentClient.ExpressionAttributeNameMap = {};
   for (let i = 0; i < conditionExpression.length; i++) {
     const currentExpression = conditionExpression[i];
     if (currentExpression.kind === ConditionExpressionKind.AndOr) {
@@ -30,17 +31,20 @@ const buildConditionExpressions = (
 
       if (!comparator) continue;
       const operator = keyOperatorLookup(comparator);
+      const expressionName = `#key_${key}`;
+      attrNames[expressionName] = key;
+
       if (operator === 'BETWEEN') {
-        expression += `${key} ${operator} :val${i}_1 AND :val${i}_2`;
+        expression += `${expressionName} ${operator} :val${i}_1 AND :val${i}_2`;
         attrValues[`:val${i}_1`] = value[0];
         attrValues[`:val${i}_2`] = value[1];
       } else {
-        expression += `${key} ${operator} :val${i}`;
+        expression += `${expressionName} ${operator} :val${i}`;
         attrValues[`:val${i}`] = value;
       }
     }
   }
-  return { expression, attrValues };
+  return { expression, attrValues, attrNames };
 };
 
 const buildUpdateExpressions = (item: object) => {
@@ -51,7 +55,7 @@ const buildUpdateExpressions = (item: object) => {
   Object.keys(item)?.forEach(key => {
     expressions.push(`#key_${key} = :val_${key}`);
     expressionNames[`#key_${key}`] = key;
-    expressionValues[`:val_${key}`] = item[key]; // convert to dynamoDB object
+    expressionValues[`:val_${key}`] = item[key];
   });
 
   return {
@@ -95,7 +99,9 @@ export async function updateItem<T extends AnyObject>(
     Key: key,
     ConditionExpression: conditionExpr.expression,
     UpdateExpression: updateExpr.expression,
-    ExpressionAttributeNames: updateExpr.names,
+    ExpressionAttributeNames:
+      // merge condition and update expressions' names
+      Object.assign({}, conditionExpr.attrNames, updateExpr.names),
     ExpressionAttributeValues:
       // merge condition and update expressions' values
       Object.assign({}, conditionExpr.attrValues, updateExpr.values),
