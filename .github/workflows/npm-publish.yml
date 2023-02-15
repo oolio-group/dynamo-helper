@@ -3,6 +3,7 @@ on:
   push:
     branches:
       - 'master'
+      - 'nalin/ci/deployment-skip-fixes'
 
 jobs:
   npm-publish:
