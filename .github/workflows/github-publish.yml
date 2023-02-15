@@ -15,7 +15,7 @@ jobs:
       uses: actions/checkout@master
     - uses: actions/setup-node@v1
       with:
-        node-version: "14"
+        node-version: "12.x"
         registry-url: "https://npm.pkg.github.com"
         scope: "@hitz-group"
     - name: Install Node Dependencies
