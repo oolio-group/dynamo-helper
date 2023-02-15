@@ -11,7 +11,7 @@ jobs:
   github-publish:
     name: github-publish
     runs-on: ubuntu-latest
-    if: contains( github.event.head_commit.message, 'Test***')
+    if: contains( github.event.head_commit.message, 'Test')
     steps:
     - name: Checkout repository
       uses: actions/checkout@v3
