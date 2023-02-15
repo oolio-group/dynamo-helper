@@ -47,7 +47,7 @@ const buildConditionExpressions = (
   return { expression, attrValues, attrNames };
 };
 
-const buildUpdateExpressions = (item: object) => {
+const buildUpdateExpressions = (item: object): ConditionExpressionReturn => {
   const expressions = [];
   const expressionValues = {};
   const expressionNames = {};
@@ -60,8 +60,8 @@ const buildUpdateExpressions = (item: object) => {
 
   return {
     expression: `SET ${expressions.join(', ')}`,
-    values: expressionValues,
-    names: expressionNames,
+    attrValues: expressionValues,
+    attrNames: expressionNames,
   };
 };
 
@@ -101,10 +101,10 @@ export async function updateItem<T extends AnyObject>(
     UpdateExpression: updateExpr.expression,
     ExpressionAttributeNames:
       // merge condition and update expressions' names
-      Object.assign({}, conditionExpr.attrNames, updateExpr.names),
+      Object.assign({}, conditionExpr.attrNames, updateExpr.attrNames),
     ExpressionAttributeValues:
       // merge condition and update expressions' values
-      Object.assign({}, conditionExpr.attrValues, updateExpr.values),
+      Object.assign({}, conditionExpr.attrValues, updateExpr.attrValues),
   };
 
   return dbClient.update(params).promise();
