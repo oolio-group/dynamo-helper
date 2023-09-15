@@ -302,7 +302,6 @@ describe('Pagination', () => {
     const mockValueOfQuery = testClient.query.mock.calls[0][0];
     expect(mockValueOfQuery.KeyConditionExpression).toBe('#PK = :pk');
     expect(mockValueOfQuery.TableName).toBe(testTableConf.name);
-    expect(mockValueOfQuery.IndexName).toBe('default');
     expect(result.items).toStrictEqual(
       ITEMS.filter(item => item.pk === 'pk#products').sort((a, b) =>
         a.sk.localeCompare(b.sk),
@@ -322,7 +321,6 @@ describe('Pagination', () => {
     expect(typeof result.cursor).toBe('string');
     expect(testClient.query).toHaveBeenNthCalledWith(1, {
       TableName: testTableConf.name,
-      IndexName: 'default',
       KeyConditionExpression: '#PK = :pk',
       ExpressionAttributeNames: {
         '#PK': 'pk',
@@ -348,7 +346,6 @@ describe('Pagination', () => {
     expect(typeof result.cursor).toBe('string');
     expect(testClient.query).toHaveBeenNthCalledWith(1, {
       TableName: testTableConf.name,
-      IndexName: 'default',
       KeyConditionExpression: '#PK = :pk',
       ExpressionAttributeNames: {
         '#PK': 'pk',
@@ -379,7 +376,6 @@ describe('Pagination', () => {
     expect(typeof result.cursor).toBe('string');
     expect(testClient.query).toHaveBeenNthCalledWith(1, {
       TableName: testTableConf.name,
-      IndexName: 'default',
       KeyConditionExpression: '#PK = :pk',
       ExpressionAttributeNames: {
         '#PK': 'pk',
@@ -412,7 +408,6 @@ describe('Pagination', () => {
 
       expect(testClient.query).toHaveBeenNthCalledWith(i, {
         TableName: testTableConf.name,
-        IndexName: 'default',
         KeyConditionExpression: '#PK = :pk',
         ExpressionAttributeNames: {
           '#PK': 'pk',
@@ -521,5 +516,19 @@ describe('Pagination', () => {
     const mockValueOfQuery = testClient.query.mock.calls[1][0];
     expect(mockValueOfQuery.Limit).toBe(2);
     expect(mockValueOfQuery.ExclusiveStartKey).toBeDefined();
+  });
+
+  test('IndexName should be empty when querying using default index', async () => {
+    mockQuery = jest.spyOn(testClient, 'query');
+
+    await query({
+      where: {
+        pk: 'something',
+      },
+      limit: 5,
+    });
+
+    const calledParams = mockQuery.mock.calls[0];
+    expect(calledParams).not.toHaveProperty('IndexName');
   });
 });
