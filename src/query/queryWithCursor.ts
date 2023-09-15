@@ -16,9 +16,11 @@ export async function queryWithCursor<T extends AnyObject>(
   dbClient: DocumentClient,
   table: TableConfig,
   filter: Filter<T>,
-  indexName = 'default',
+  indexName?: string,
 ): Promise<{ items: Array<T>; cursor?: string; scannedCount: number }> {
-  const { partitionKeyName, sortKeyName } = table.indexes[indexName];
+  const { partitionKeyName, sortKeyName } = table.indexes[
+    indexName || 'default'
+  ];
 
   if (!sortKeyName) {
     throw new Error('Expected sortKey to query');
