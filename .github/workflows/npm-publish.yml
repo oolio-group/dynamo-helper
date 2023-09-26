@@ -9,8 +9,8 @@ jobs:
     name: npm-publish
     runs-on: ubuntu-latest
     strategy:
-    matrix:
-      node-version: [14, 16, 18, 20]
+      matrix:
+        node-version: [14, 16, 18, 20]
     steps:
     - name: Checkout repository
       uses: actions/checkout@v3
