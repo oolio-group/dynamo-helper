@@ -1,5 +1,5 @@
 {
-  "name": "@hitz-group/dynamo-helper",
+  "name": "@oolio-group/dynamo-helper",
   "description": "DynamoDB client and query expression builder. Helps with most of the DynamoDB operations and takes care of the hard stuff for you.",
   "keywords": [
     "dynamodb",
@@ -7,7 +7,7 @@
     "dynamo",
     "nosql"
   ],
-  "version": "0.5.19",
+  "version": "0.5.20",
   "files": [
     "lib",
     "LICENSE",
@@ -17,9 +17,9 @@
   "types": "lib",
   "repository": {
     "type": "git",
-    "url": "http://github.com/hitz-group/dynamo-helper.git"
+    "url": "http://github.com/oolio-group/dynamo-helper.git"
   },
-  "bugs": "https://github.com/hitz-group/dynamo-helper/issues",
+  "bugs": "https://github.com/oolio-group/dynamo-helper/issues",
   "license": "MIT",
   "contributors": [
     "Shidil Eringa <shidil@live.com>",
