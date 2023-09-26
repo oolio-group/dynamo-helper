@@ -1,8 +1,8 @@
-# @hitz-group/dynamo-helper
+# @oolio-group/dynamo-helper
 
 Library package that exports several methods for helping with DynamoDB operations. Abstracts most DynamoDB operations and builds query parameters using a unified filter object. Mainly aimed at single table design pattern
 
-[![codecov](https://codecov.io/gh/hitz-group/dynamo-helper/branch/master/graph/badge.svg?token=WDLQ7IBV6Y)](https://codecov.io/gh/hitz-group/dynamo-helper) [![npm](https://img.shields.io/npm/v/@hitz-group/dynamo-helper/latest.svg)](https://www.npmjs.com/package/@hitz-group/dynamo-helper) ![Build](https://github.com/hitz-group/dynamo-helper/workflows/Unit%20Tests%20and%20ESLint/badge.svg)
+[![codecov](https://codecov.io/gh/oolio-group/dynamo-helper/branch/master/graph/badge.svg?token=WDLQ7IBV6Y)](https://codecov.io/gh/oolio-group/dynamo-helper) [![npm](https://img.shields.io/npm/v/@oolio-group/dynamo-helper/latest.svg)](https://www.npmjs.com/package/@oolio-group/dynamo-helper) ![Build](https://github.com/oolio-group/dynamo-helper/workflows/Unit%20Tests%20and%20ESLint/badge.svg)
 
 ## Usage
 
@@ -11,9 +11,9 @@ Library package that exports several methods for helping with DynamoDB operation
 Import DynamoHelper
 
 ```typescript
-import { DynamoHelper } from '@hitz-group/dynamo-helper';
+import { DynamoHelper } from '@oolio-group/dynamo-helper';
 
-const { DynamoHelper } = require('@hitz-group/dynamo-helper');
+const { DynamoHelper } = require('@oolio-group/dynamo-helper');
 ```
 
 Use constructor to create the DynamoHelper instance
@@ -37,7 +37,7 @@ export interface TableConfig {
 ### Example
 
 ```typescript
-import { DynamoHelper } from '@hitz-group/dynamo-helper';
+import { DynamoHelper } from '@oolio-group/dynamo-helper';
 
 const table = {
   name: 'my-ddb-table',
@@ -66,9 +66,9 @@ await client.query({
 ### buildQueryTableParams
 
 ```typescript
-import { buildQueryTableParams } from '@hitz-group/dynamo-helper';
+import { buildQueryTableParams } from '@oolio-group/dynamo-helper';
 
-const { buildQueryTableParams } = require('@hitz-group/dynamo-helper');
+const { buildQueryTableParams } = require('@oolio-group/dynamo-helper');
 ```
 
 This method generates DynamoDB query input params from given filter object of type `Filter<T>`
@@ -125,7 +125,7 @@ It returns a partial `QueryInput` which does not contain `TableName` or `IndexNa
 #### Usage
 
 ```typescript
-import { buildQueryTableParams } from '@hitz-group/dynamo-helper';
+import { buildQueryTableParams } from '@oolio-group/dynamo-helper';
 
 // Get all inactive product id's in organization
 const queryInput = buildQueryTableParams<ProductModel>({
@@ -148,7 +148,7 @@ Perform a query operation in DynamoDB. Input parameter `Filter` can be customize
 See type `Filter` for supported operations
 
 ```typescript
-import { query } from '@hitz-group/dynamo-helper';
+import { query } from '@oolio-group/dynamo-helper';
 
 // Get all inactive product id's in organization
 const products = await dynamoHelper.query<ProductModel>({
@@ -232,7 +232,7 @@ Required, at least partition key values must be provided.
 Optional, specify fields to project
 
 ```typescript
-import { getItem } from '@hitz-group/dynamo-helper';
+import { getItem } from '@oolio-group/dynamo-helper';
 
 // Get a single product matching the key
 await dynamoHelper.getItem<ProductModel>({ pk: 'org_uuid', sk: 'product_xxx' });
@@ -247,7 +247,7 @@ await dynamoHelper.getItem<ProductModel>({ id: 'product_xxx' }, [
 Fetch many items using pk and sk combination
 
 ```typescript
-import { batchGetItems } from '@hitz-group/dynamo-helper';
+import { batchGetItems } from '@oolio-group/dynamo-helper';
 
 // Get all products matching the keys
 const products = await dynamoHelper.batchGetItems<ProductModel>([
@@ -261,7 +261,7 @@ const products = await dynamoHelper.batchGetItems<ProductModel>([
 Check if an item exists in the database with the keys provided. Returns a boolean value
 
 ```typescript
-import { exists } from '@hitz-group/dynamo-helper';
+import { exists } from '@oolio-group/dynamo-helper';
 
 // Check if product already exists
 if (await dynamoHelper.exists({ id: 'x' })) {
@@ -274,7 +274,7 @@ if (await dynamoHelper.exists({ id: 'x' })) {
 Create a new item or replace an existing item in the database
 
 ```typescript
-import { putItem } from '@hitz-group/dynamo-helper';
+import { putItem } from '@oolio-group/dynamo-helper';
 
 await dynamoHelper.putItem({
   pk: 'x',
@@ -288,7 +288,7 @@ await dynamoHelper.putItem({
 Remove an item from database matching the key provided if it exists
 
 ```typescript
-import { deleteItem } from '@hitz-group/dynamo-helper';
+import { deleteItem } from '@oolio-group/dynamo-helper';
 
 // delete product
 await dynamoHelper.deleteItem({ id: '1' });
@@ -301,7 +301,7 @@ If any of the many operations fails then whole transaction is considered as fail
 This is useful when multiple entries needs to be created or replaced for an API operation
 
 ```typescript
-import { transactPutItems } from '@hitz-group/dynamo-helper';
+import { transactPutItems } from '@oolio-group/dynamo-helper';
 
 // initiate a transaction
 await dynamoHelper.transactPutItems([
@@ -330,7 +330,7 @@ Create or replace multiple items in the database at the same time. This method w
 > The BatchWriteItem operation puts or deletes multiple items in one or more tables. A single call to BatchWriteItem can write up to 16 MB of data, which can comprise as many as 25 put or delete requests. Individual items to be written can be as large as 400 KB.
 
 ```typescript
-import { batchPutItems } from '@hitz-group/dynamo-helper';
+import { batchPutItems } from '@oolio-group/dynamo-helper';
 
 // create multiple items
 await dynamoHelper.batchPutItems([
@@ -359,7 +359,7 @@ Delete multiple items in the database at the same time. This method will chunk y
 > The BatchWriteItem operation puts or deletes multiple items in one or more tables. A single call to BatchWriteItem can write up to 16 MB of data, which can comprise as many as 25 put or delete requests. Individual items to be written can be as large as 400 KB.
 
 ```typescript
-import { batchDeleteItems } from '@hitz-group/dynamo-helper';
+import { batchDeleteItems } from '@oolio-group/dynamo-helper';
 
 // delete multiple items
 await dynamoHelper.batchDeleteItems([
@@ -383,7 +383,7 @@ await dynamoHelper.batchDeleteItems([
 Checks if keys provided exists in database or not. Returns empty list if all items are found in DB. Returns list of items not found in DB if there are non existent items.
 
 ```typescript
-import { batchExists } from '@hitz-group/dynamo-helper';
+import { batchExists } from '@oolio-group/dynamo-helper';
 
 const result = await dynamoHelper.batchExists([
   {
@@ -416,7 +416,7 @@ Supports updating item conditionally using [Conditional writes](https://docs.aws
 import {
   updateItem,
   ConditionExpressionInput,
-} from '@hitz-group/dynamo-helper';
+} from '@oolio-group/dynamo-helper';
 
 const where = {
   pk: 'product_123',
