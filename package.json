@@ -1,5 +1,5 @@
 {
-  "name": "@hitz-group/dynamo-helper",
+  "name": "@oolio-group/dynamo-helper",
   "description": "DynamoDB client and query expression builder. Helps with most of the DynamoDB operations and takes care of the hard stuff for you.",
   "keywords": [
     "dynamodb",
@@ -7,7 +7,7 @@
     "dynamo",
     "nosql"
   ],
-  "version": "0.5.19",
+  "version": "0.5.20",
   "files": [
     "lib",
     "LICENSE",
@@ -17,9 +17,9 @@
   "types": "lib",
   "repository": {
     "type": "git",
-    "url": "http://github.com/hitz-group/dynamo-helper.git"
+    "url": "http://github.com/oolio-group/dynamo-helper.git"
   },
-  "bugs": "https://github.com/hitz-group/dynamo-helper/issues",
+  "bugs": "https://github.com/oolio-group/dynamo-helper/issues",
   "license": "MIT",
   "contributors": [
     "Shidil Eringa <shidil@live.com>",
@@ -35,15 +35,15 @@
     "lint:report": "eslint . --output-file ./eslint_report.json --format json  --ext .ts,.js,.tsx | true"
   },
   "dependencies": {
-    "aws-sdk": "2.784.0",
-    "crypto-js": "^4.0.0",
+    "aws-sdk": "^2.1464.0",
+    "crypto-js": "^4.1.1",
     "lodash": "4.17.21"
   },
   "devDependencies": {
     "@babel/core": "7.12.1",
     "@babel/preset-env": "7.12.1",
     "@babel/preset-typescript": "7.12.1",
-    "@types/crypto-js": "^4.0.1",
+    "@types/crypto-js": "^4.1.2",
     "@types/jest": "26.0.15",
     "@typescript-eslint/eslint-plugin": "4.6.1",
     "@typescript-eslint/parser": "4.6.1",
