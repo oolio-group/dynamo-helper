@@ -13,6 +13,9 @@ jobs:
     name: Test And Code coverage
     runs-on: ubuntu-latest
     timeout-minutes: 20
+    strategy:
+      matrix:
+        node-version: [14, 16, 18, 20]
     steps:
       - name: Skip NO CI
         if: contains( github.event.head_commit.message, '***NO_CI***')

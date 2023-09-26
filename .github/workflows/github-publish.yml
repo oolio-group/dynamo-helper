@@ -10,14 +10,12 @@ jobs:
   github-publish:
     name: github-publish
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        node-version: [14, 16, 18, 20]
     steps:
     - name: Checkout repository
       uses: actions/checkout@v3
     - uses: actions/setup-node@v3
       with:
+        node-version: 14
         registry-url: "https://npm.pkg.github.com"
         scope: "@hitz-group"
     - name: Install Node Dependencies
