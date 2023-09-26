@@ -35,15 +35,15 @@
     "lint:report": "eslint . --output-file ./eslint_report.json --format json  --ext .ts,.js,.tsx | true"
   },
   "dependencies": {
-    "aws-sdk": "^2.1464.0",
-    "crypto-js": "^4.1.1",
+    "aws-sdk": "2.784.0",
+    "crypto-js": "^4.0.0",
     "lodash": "4.17.21"
   },
   "devDependencies": {
     "@babel/core": "7.12.1",
     "@babel/preset-env": "7.12.1",
     "@babel/preset-typescript": "7.12.1",
-    "@types/crypto-js": "^4.1.2",
+    "@types/crypto-js": "^4.0.1",
     "@types/jest": "26.0.15",
     "@typescript-eslint/eslint-plugin": "4.6.1",
     "@typescript-eslint/parser": "4.6.1",
