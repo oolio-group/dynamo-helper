@@ -26,6 +26,7 @@ import {
   Filter,
   TableConfig,
 } from './types';
+import { transactDeleteItems } from './mutation/transactDeleteItems';
 
 export class DynamoHelper {
   table: TableConfig;
@@ -110,8 +111,14 @@ export class DynamoHelper {
 
   async transactPutItems(
     items: Array<AnyObject>,
-  ): Promise<PromiseResult<TransactWriteItemsOutput, AWSError>> {
+  ): Promise<Array<PromiseResult<TransactWriteItemsOutput, AWSError>>> {
     return transactPutItems(this.dbClient, this.table, items);
+  }
+
+  async transactDeleteItems(
+    keys: Array<DocumentClient.Key>,
+  ): Promise<Array<PromiseResult<TransactWriteItemsOutput, AWSError>>> {
+    return transactDeleteItems(this.dbClient, this.table, keys);
   }
 
   async updateItem<T extends AnyObject>(

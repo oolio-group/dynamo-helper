@@ -5,29 +5,29 @@ import { AnyObject, TableConfig } from '../types';
 import chunk from 'lodash/chunk';
 
 /**
- * Put multiple items in the DB as a transaction
+ * Delete multiple items in the DB as a transaction
  * Operation fails if any one of the item operation fails
  * @param items List of items
  */
-export function transactPutItems(
+export function transactDeleteItems(
   dbClient: DocumentClient,
   table: TableConfig,
-  items: Array<AnyObject>,
+  keys: Array<DocumentClient.Key>,
 ): Promise<
   Array<PromiseResult<DocumentClient.TransactWriteItemsOutput, AWSError>>
 > {
   // TransactWriteItems accepts maximum of 100 items, 4 MB total and 400 KB per each item
   // https://docs.aws.amazon.com/amazondynamodb/latest/APIReference/API_TransactWriteItems.html
-  const batches = chunk(items, 100) as Array<AnyObject[]>;
+  const batches = chunk(keys, 100) as Array<AnyObject[]>;
 
   return Promise.all(
     batches.map(x =>
       dbClient
         .transactWrite({
           TransactItems: x.map<TransactWriteItem>(x => ({
-            Put: {
+            Delete: {
               TableName: table.name,
-              Item: x,
+              Key: x,
             },
           })),
         })
