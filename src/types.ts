@@ -25,7 +25,9 @@ export type DynamoDBOperators =
   | 'BEGINS_WITH'
   | 'IN'
   | 'EXISTS'
-  | 'CONTAINS';
+  | 'CONTAINS'
+  | 'ATTRIBUTE_EXISTS'
+  | 'ATTRIBUTE_NOT_EXISTS';
 
 /**
  * Operators for where clauses
@@ -41,6 +43,8 @@ export type FilterOperators =
   | 'between'
   | 'like'
   | 'exists'
+  | 'attribute_exists'
+  | 'attribute_not_exists'
   | 'beginsWith';
 /**
  * Matching predicate comparison

@@ -39,6 +39,10 @@ export function keyOperatorLookup(
       return 'BEGINS_WITH';
     case 'exists':
       return 'EXISTS';
+    case 'attribute_exists':
+      return 'ATTRIBUTE_EXISTS';
+    case 'attribute_not_exists':
+      return 'ATTRIBUTE_NOT_EXISTS';
     default:
       return '=';
   }
