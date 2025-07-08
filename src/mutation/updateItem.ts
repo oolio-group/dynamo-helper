@@ -38,7 +38,7 @@ const buildConditionExpressions = (
         expression += `${expressionName} ${operator} :val${i}_1 AND :val${i}_2`;
         attrValues[`:val${i}_1`] = value[0];
         attrValues[`:val${i}_2`] = value[1];
-      } else if (operator=== 'ATTRIBUTE_EXISTS' || operator === 'ATTRIBUTE_NOT_EXISTS') {
+      } else if (operator === 'ATTRIBUTE_EXISTS' || operator === 'ATTRIBUTE_NOT_EXISTS') {
         expression += `${operator.toLowerCase()}(${expressionName})`;
       } else {
         expression += `${expressionName} ${operator} :val${i}`;
