@@ -626,7 +626,7 @@ describe('Query Builder', () => {
       fields: ['id'],
     });
 
-    expect(tableParams.ProjectionExpression).toBe('id,pk,sk');
+    expect(tableParams.ProjectionExpression).toBe('#id,pk,sk');
 
     tableParams = buildQueryTableParams<ProductModel>({
       where: {
@@ -636,7 +636,7 @@ describe('Query Builder', () => {
       fields: ['id', 'isActive', 'barcode'],
     });
 
-    expect(tableParams.ProjectionExpression).toBe('id,isActive,barcode,pk,sk');
+    expect(tableParams.ProjectionExpression).toBe('#id,#isActive,#barcode,pk,sk');
   });
 
   test('applies limit on items', () => {
