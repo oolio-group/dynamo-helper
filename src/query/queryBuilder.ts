@@ -252,19 +252,19 @@ export function buildQueryTableParams<T extends object = AnyObject>(
   // if at least one field is provided filter is applied
   if (filter.fields && filter.fields.length > 0) {
 
+    const fields = [...filter.fields, partitionKeyName, sortKeyName];
+
     const expressionAttributeNames = tableParams.ExpressionAttributeNames || {};
 
-    // use aliases for fields to avoid reserved keywords and special characters issues
-    const safetyFields = filter.fields.map(f => {
-      const alias = `#${String(f)}`;
+    // use aliases for fields to avoid reserved keywords
+    const projectionFieldAliases = fields.map(f => {
+      const alias = `#${f.toString().toUpperCase()}`;
       expressionAttributeNames[alias] = f;
       return alias;
     });
 
-    const fields = [...safetyFields, partitionKeyName, sortKeyName];
-
     tableParams.ExpressionAttributeNames = expressionAttributeNames;
-    tableParams.ProjectionExpression = fields.join(',');
+    tableParams.ProjectionExpression = projectionFieldAliases.join(',');
   }
 
   // Apply limit parameter. If set result will only contain X number of items
