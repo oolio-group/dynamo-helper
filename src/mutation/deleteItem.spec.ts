@@ -1,21 +1,17 @@
-import { DeleteItemInput } from 'aws-sdk/clients/dynamodb';
+import { DeleteCommand } from '@aws-sdk/lib-dynamodb';
 import { testClient, testTableConf } from '../testUtils';
 import { deleteItem as deleteItemMethod } from './deleteItem';
 
 describe('deleteItem', () => {
   const deleteItem = deleteItemMethod.bind(null, testClient, testTableConf);
-  const spy = jest.spyOn(testClient, 'delete');
+  const spy = jest.spyOn(testClient, 'send');
 
   beforeEach(() => {
-    spy.mockReturnValue({
-      promise: jest.fn().mockResolvedValue({}),
-    });
+    spy.mockResolvedValue({});
   });
 
   beforeEach(() => {
-    spy.mockReturnValue({
-      promise: jest.fn().mockResolvedValue({}),
-    });
+    spy.mockResolvedValue({});
   });
 
   test('exports function', () => {
@@ -53,9 +49,7 @@ describe('deleteItem', () => {
   });
 
   test('promise rejection', async () => {
-    spy.mockReturnValue({
-      promise: jest.fn().mockRejectedValue([]),
-    });
+    spy.mockRejectedValue([]);
 
     await expect(deleteItem({ pk: 'xxxx', sk: 'yyyy' })).rejects.toStrictEqual(
       [],
@@ -64,12 +58,14 @@ describe('deleteItem', () => {
 
   test('uses delete correctly', async () => {
     await deleteItem({ pk: 'xxxx', sk: 'yyyy' });
-    expect(spy).toHaveBeenCalledWith({
-      TableName: testTableConf.name,
-      Key: {
-        pk: 'xxxx',
-        sk: 'yyyy',
-      },
-    } as DeleteItemInput);
+    expect(spy).toHaveBeenCalledWith(expect.objectContaining({
+      input: {
+        TableName: testTableConf.name,
+        Key: {
+          pk: 'xxxx',
+          sk: 'yyyy',
+        },
+      }
+    }));
   });
 });

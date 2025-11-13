@@ -1,5 +1,5 @@
-import { DocumentClient } from 'aws-sdk/clients/dynamodb';
-import { AnyObject, TableConfig } from '../types';
+import { DynamoDBDocumentClient, GetCommand, GetCommandInput } from '@aws-sdk/lib-dynamodb';
+import { AnyObject, TableConfig, Key } from '../types';
 
 /**
  * Get item by partition key and sort key
@@ -9,9 +9,9 @@ import { AnyObject, TableConfig } from '../types';
  * @returns {T} resolved item
  */
 export async function getItem<T extends AnyObject>(
-  dbClient: DocumentClient,
+  dbClient: DynamoDBDocumentClient,
   table: TableConfig,
-  key: DocumentClient.Key,
+  key: Key,
   fields?: Array<keyof T>,
 ): Promise<T> {
   const index = table.indexes.default;
@@ -26,7 +26,7 @@ export async function getItem<T extends AnyObject>(
     );
   }
 
-  const params: DocumentClient.GetItemInput = {
+  const params: GetCommandInput = {
     Key: key,
     TableName: table.name,
   };
@@ -35,7 +35,7 @@ export async function getItem<T extends AnyObject>(
     params.ProjectionExpression = fields.join(',');
   }
 
-  const result = await dbClient.get(params).promise();
+  const result = await dbClient.send(new GetCommand(params));
 
   return result && result.Item ? (result.Item as T) : null;
 }

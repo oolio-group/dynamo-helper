@@ -8,12 +8,10 @@ describe('updateItem', () => {
     testClient,
     testTableConf,
   );
-  const spy = jest.spyOn(testClient, 'update');
+  const spy = jest.spyOn(testClient, 'send');
 
   beforeEach(() => {
-    spy.mockReturnValue({
-      promise: jest.fn().mockResolvedValue({}),
-    });
+    spy.mockResolvedValue({});
   });
 
   it('should update item in table when conditions are met', async () => {
@@ -54,35 +52,35 @@ describe('updateItem', () => {
     const attributesToUpdate = { name: 'Dru', age: 30 };
     await updateItem(key, conditions, attributesToUpdate);
 
-    expect(spy).toHaveBeenCalledWith({
-      ConditionExpression:
-        '#key_id = :val0 OR #key_name = :val2 AND #key_age > :val4 AND #key_age BETWEEN :val6_1 AND :val6_2',
-      ExpressionAttributeValues: {
-        ':val0': 123,
-        ':val2': 'Gru',
-        ':val4': 20,
-        ':val6_1': 20,
-        ':val6_2': 30,
-        ':val_name': 'Dru',
-        ':val_age': 30,
-      },
-      ExpressionAttributeNames: {
-        '#key_age': 'age',
-        '#key_name': 'name',
-        '#key_id': 'id',
-      },
-      Key: { pk: 'user_123' },
-      TableName: 'sample-table',
-      UpdateExpression: 'SET #key_name = :val_name, #key_age = :val_age',
-    });
+    expect(spy).toHaveBeenCalledWith(expect.objectContaining({
+      input: {
+        ConditionExpression:
+          '#key_id = :val0 OR #key_name = :val2 AND #key_age > :val4 AND #key_age BETWEEN :val6_1 AND :val6_2',
+        ExpressionAttributeValues: {
+          ':val0': 123,
+          ':val2': 'Gru',
+          ':val4': 20,
+          ':val6_1': 20,
+          ':val6_2': 30,
+          ':val_name': 'Dru',
+          ':val_age': 30,
+        },
+        ExpressionAttributeNames: {
+          '#key_age': 'age',
+          '#key_name': 'name',
+          '#key_id': 'id',
+        },
+        Key: { pk: 'user_123' },
+        TableName: 'sample-table',
+        UpdateExpression: 'SET #key_name = :val_name, #key_age = :val_age',
+      }
+    }));
   });
 
   it('should throw error when conditions are not met', async () => {
-    spy.mockReturnValue({
-      promise: jest.fn().mockResolvedValue({
-        Item: {},
-        err: new Error('Conditions failed'),
-      }),
+    spy.mockResolvedValue({
+      Item: {},
+      err: new Error('Conditions failed'),
     });
 
     const key = { pk: 'user_123' };
@@ -157,9 +155,7 @@ describe('updateItem', () => {
   });
 
   it('should throw error when request failed', async () => {
-    spy.mockReturnValue({
-      promise: jest.fn().mockRejectedValue({}),
-    });
+    spy.mockRejectedValue({});
 
     const key = { pk: 'user_123' };
     const conditions: ConditionExpressionInput[] = [

@@ -1,4 +1,4 @@
-import { BatchWriteItemInput } from 'aws-sdk/clients/dynamodb';
+import { BatchWriteCommand } from '@aws-sdk/lib-dynamodb';
 import fill from 'lodash/fill';
 import { testClient, testTableConf } from '../testUtils';
 import { batchPutItems as batchPutItemsMethod } from './batchPutItems';
@@ -9,13 +9,11 @@ describe('batchPutItems', () => {
     testClient,
     testTableConf,
   );
-  const spy = jest.spyOn(testClient, 'batchWrite');
+  const spy = jest.spyOn(testClient, 'send');
 
   beforeEach(() => {
     spy.mockClear();
-    spy.mockReturnValue({
-      promise: jest.fn().mockResolvedValue({}),
-    });
+    spy.mockResolvedValue({});
   });
 
   test('exports function', () => {
@@ -23,9 +21,7 @@ describe('batchPutItems', () => {
   });
 
   test('promise rejection', async () => {
-    spy.mockReturnValue({
-      promise: jest.fn().mockRejectedValue([]),
-    });
+    spy.mockRejectedValue([]);
     await expect(batchPutItems([{}, {}])).rejects.toStrictEqual([]);
   });
 
@@ -46,21 +42,23 @@ describe('batchPutItems', () => {
       { pk: 'y', sk: '2' },
     ]);
 
-    expect(spy).toHaveBeenCalledWith({
-      RequestItems: {
-        [testTableConf.name]: [
-          {
-            PutRequest: {
-              Item: { pk: 'x', sk: '1' },
+    expect(spy).toHaveBeenCalledWith(expect.objectContaining({
+      input: {
+        RequestItems: {
+          [testTableConf.name]: [
+            {
+              PutRequest: {
+                Item: { pk: 'x', sk: '1' },
+              },
             },
-          },
-          {
-            PutRequest: {
-              Item: { pk: 'y', sk: '2' },
+            {
+              PutRequest: {
+                Item: { pk: 'y', sk: '2' },
+              },
             },
-          },
-        ],
-      },
-    } as BatchWriteItemInput);
+          ],
+        },
+      }
+    }));
   });
 });

@@ -3,7 +3,7 @@ import { getItem as getItemMethod } from './getItem';
 
 describe('getItem', () => {
   const getItem = getItemMethod.bind(null, testClient, testTableConf);
-  const spy = jest.spyOn(testClient, 'get');
+  const spy = jest.spyOn(testClient, 'send');
 
   beforeEach(() => {
     jest.clearAllMocks();
@@ -40,9 +40,7 @@ describe('getItem', () => {
   });
 
   test('returns null if item not found', async () => {
-    spy.mockReturnValue({
-      promise: jest.fn().mockResolvedValue({ Item: null }),
-    });
+    spy.mockResolvedValue({ Item: null });
 
     // No results found, hence empty list.
     // getItem will return null in this case
@@ -51,9 +49,7 @@ describe('getItem', () => {
 
   test('returns first item if found', async () => {
     // If query result is not empty getItem returns first item in list
-    spy.mockReturnValue({
-      promise: jest.fn().mockResolvedValue({ Item: { id: 'xxxx' } }),
-    });
+    spy.mockResolvedValue({ Item: { id: 'xxxx' } });
 
     await expect(getItem({ pk: 'xxxx', sk: 'yyyy' })).resolves.toStrictEqual({
       id: 'xxxx',
@@ -61,18 +57,18 @@ describe('getItem', () => {
   });
 
   test('fields to project', async () => {
-    spy.mockReturnValue({
-      promise: jest.fn().mockResolvedValue({ Item: { id: 'xxxx' } }),
-    });
+    spy.mockResolvedValue({ Item: { id: 'xxxx' } });
 
     await getItem({ pk: 'xxxx', sk: 'yyyy' }, ['id']);
-    expect(testClient.get).toHaveBeenCalledWith({
-      TableName: testTableConf.name,
-      Key: {
-        pk: 'xxxx',
-        sk: 'yyyy',
-      },
-      ProjectionExpression: 'id',
-    });
+    expect(testClient.send).toHaveBeenCalledWith(expect.objectContaining({
+      input: {
+        TableName: testTableConf.name,
+        Key: {
+          pk: 'xxxx',
+          sk: 'yyyy',
+        },
+        ProjectionExpression: 'id',
+      }
+    }));
   });
 });

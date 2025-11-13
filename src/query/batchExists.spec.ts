@@ -1,34 +1,32 @@
-import { BatchGetItemInput } from 'aws-sdk/clients/dynamodb';
+import { BatchGetCommand } from '@aws-sdk/lib-dynamodb';
 import range from 'lodash/range';
 import { testClient, testTableConf } from '../testUtils';
 import { batchExists as batchExistsMethod } from './batchExists';
 
 describe('batchExists', () => {
   const batchExists = batchExistsMethod.bind(null, testClient, testTableConf);
-  const spy = jest.spyOn(testClient, 'batchGet');
+  const spy = jest.spyOn(testClient, 'send');
 
   beforeEach(() => {
     spy.mockClear();
-    spy.mockImplementation((params: BatchGetItemInput) => {
-      return {
-        promise: jest.fn().mockResolvedValue({
-          Responses: {
-            [testTableConf.name]: params.RequestItems[testTableConf.name].Keys,
-          },
-        }),
-      };
+    spy.mockImplementation((command: any) => {
+      const params = command.input;
+      return Promise.resolve({
+        Responses: {
+          [testTableConf.name]: params.RequestItems[testTableConf.name].Keys,
+        },
+      });
     });
   });
 
   beforeEach(() => {
-    spy.mockImplementation((params: BatchGetItemInput) => {
-      return {
-        promise: jest.fn().mockResolvedValue({
-          Responses: {
-            [testTableConf.name]: params.RequestItems[testTableConf.name].Keys,
-          },
-        }),
-      };
+    spy.mockImplementation((command: any) => {
+      const params = command.input;
+      return Promise.resolve({
+        Responses: {
+          [testTableConf.name]: params.RequestItems[testTableConf.name].Keys,
+        },
+      });
     });
   });
   test('returns empty if all keys exist', async () => {
@@ -41,15 +39,14 @@ describe('batchExists', () => {
   });
 
   test('returns not found keys if not all items exist', async () => {
-    spy.mockImplementation((params: BatchGetItemInput) => {
+    spy.mockImplementation((command: any) => {
+      const params = command.input;
       const keys = params.RequestItems[testTableConf.name].Keys;
-      return {
-        promise: jest.fn().mockResolvedValue({
-          Responses: {
-            [testTableConf.name]: keys.slice(0, 1),
-          },
-        }),
-      };
+      return Promise.resolve({
+        Responses: {
+          [testTableConf.name]: keys.slice(0, 1),
+        },
+      });
     });
 
     await expect(
@@ -61,15 +58,14 @@ describe('batchExists', () => {
   });
 
   test('with 100 items', async () => {
-    spy.mockImplementation((params: BatchGetItemInput) => {
+    spy.mockImplementation((command: any) => {
+      const params = command.input;
       const keys = params.RequestItems[testTableConf.name].Keys;
-      return {
-        promise: jest.fn().mockResolvedValue({
-          Responses: {
-            [testTableConf.name]: keys.slice(0, Math.floor(keys.length / 2)),
-          },
-        }),
-      };
+      return Promise.resolve({
+        Responses: {
+          [testTableConf.name]: keys.slice(0, Math.floor(keys.length / 2)),
+        },
+      });
     });
 
     const keys = range(100).map((i: string) => ({

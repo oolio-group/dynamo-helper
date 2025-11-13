@@ -1,4 +1,4 @@
-import { DocumentClient, Key, QueryOutput } from 'aws-sdk/clients/dynamodb';
+import { DynamoDBDocumentClient, QueryCommand, QueryCommandOutput } from '@aws-sdk/lib-dynamodb';
 import { decrypt, encrypt } from '../utils';
 import { AnyObject, Filter, TableConfig } from '../types';
 import { buildQueryTableParams } from './queryBuilder';
@@ -13,7 +13,7 @@ const DEFAULT_LIMIT = 99999;
  * @returns {Array<T>, string} list of matching items, last cursor position
  */
 export async function queryWithCursor<T extends AnyObject>(
-  dbClient: DocumentClient,
+  dbClient: DynamoDBDocumentClient,
   table: TableConfig,
   filter: Filter<T>,
   indexName?: string,
@@ -42,7 +42,7 @@ export async function queryWithCursor<T extends AnyObject>(
   if (indexName) {
     params.IndexName = indexName;
   }
-  params.ExclusiveStartKey = decrypt<Key>(
+  params.ExclusiveStartKey = decrypt<Record<string, unknown>>(
     filter.prevCursor,
     table.cursorSecret,
   );
@@ -50,25 +50,25 @@ export async function queryWithCursor<T extends AnyObject>(
   const originalLimit = params.Limit;
   let items = [];
   let totalScannedCount = 0;
-  let output: QueryOutput = {};
+  let output: QueryCommandOutput | undefined;
 
   do {
-    if (output.LastEvaluatedKey) {
+    if (output?.LastEvaluatedKey) {
       params.ExclusiveStartKey = output.LastEvaluatedKey;
     }
     if (items.length) {
       params.Limit = originalLimit - items.length;
     }
 
-    output = await dbClient.query(params).promise();
-    totalScannedCount += output.ScannedCount;
+    output = await dbClient.send(new QueryCommand(params));
+    totalScannedCount += output.ScannedCount || 0;
 
-    items = items.concat(output.Items);
-  } while (output.LastEvaluatedKey && !(items.length >= originalLimit));
+    items = items.concat(output.Items || []);
+  } while (output?.LastEvaluatedKey && !(items.length >= originalLimit));
 
   return {
     items: items as T[],
-    cursor: encrypt<Key>(output.LastEvaluatedKey, table.cursorSecret),
+    cursor: encrypt<Record<string, unknown>>(output?.LastEvaluatedKey, table.cursorSecret),
     scannedCount: totalScannedCount,
   };
 }

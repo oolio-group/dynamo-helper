@@ -1,36 +1,28 @@
-import { AWSError } from 'aws-sdk';
-import {
-  BatchWriteItemOutput,
-  DocumentClient,
-  WriteRequest,
-} from 'aws-sdk/clients/dynamodb';
-import { PromiseResult } from 'aws-sdk/lib/request';
+import { DynamoDBDocumentClient, BatchWriteCommand, BatchWriteCommandOutput } from '@aws-sdk/lib-dynamodb';
 import chunk from 'lodash/chunk';
-import { TableConfig } from '../types';
+import { TableConfig, Key } from '../types';
 
 export function batchDeleteItems(
-  dbClient: DocumentClient,
+  dbClient: DynamoDBDocumentClient,
   table: TableConfig,
-  keys: Array<DocumentClient.Key>,
-): Promise<Array<PromiseResult<BatchWriteItemOutput, AWSError>>> {
+  keys: Array<Key>,
+): Promise<Array<BatchWriteCommandOutput>> {
   // batchWriteItem accepts maximum of 25 items, 16 MB total and 400KB per each item
   // https://docs.aws.amazon.com/amazondynamodb/latest/APIReference/API_BatchWriteItem.html
   // Make chunks of 25 items
-  const batches = chunk(keys, 25) as Array<DocumentClient.Key[]>;
+  const batches = chunk(keys, 25) as Array<Array<Key>>;
 
   return Promise.all(
     batches.map(x =>
-      dbClient
-        .batchWrite({
-          RequestItems: {
-            [table.name]: x.map<WriteRequest>(key => ({
-              DeleteRequest: {
-                Key: key,
-              },
-            })),
-          },
-        })
-        .promise(),
+      dbClient.send(new BatchWriteCommand({
+        RequestItems: {
+          [table.name]: x.map(key => ({
+            DeleteRequest: {
+              Key: key,
+            },
+          })),
+        },
+      })),
     ),
   );
 }

@@ -1,8 +1,8 @@
-import { DocumentClient } from 'aws-sdk/clients/dynamodb';
+import { DynamoDBDocumentClient, BatchGetCommand, BatchGetCommandOutput } from '@aws-sdk/lib-dynamodb';
 import chunk from 'lodash/chunk';
 import keyBy from 'lodash/keyBy';
 import flatten from 'lodash/flatten';
-import { AnyObject, TableConfig } from '../types';
+import { AnyObject, TableConfig, Key } from '../types';
 
 /**
  * Get many items from the db matching the provided keys
@@ -10,12 +10,12 @@ import { AnyObject, TableConfig } from '../types';
  * @returns list of items
  */
 export async function batchGetItems(
-  dbClient: DocumentClient,
+  dbClient: DynamoDBDocumentClient,
   table: TableConfig,
-  keys: DocumentClient.Key[],
+  keys: Array<Key>,
   fields?: Array<string>,
 ): Promise<Array<AnyObject>> {
-  let result: DocumentClient.BatchGetItemOutput;
+  let result: BatchGetCommandOutput;
   let unProcessedKeys = [];
 
   // Chunk requests to bits of 100s as max items per batchGet operation is 100
@@ -44,18 +44,16 @@ export async function batchGetItems(
   }
 
   do {
-    result = await dbClient
-      .batchGet({
-        RequestItems: {
-          [table.name]: {
-            Keys: unProcessedKeys.length > 0 ? unProcessedKeys : keys,
-            ProjectionExpression: fieldsToProject
-              ? fieldsToProject.join(',')
-              : undefined,
-          },
+    result = await dbClient.send(new BatchGetCommand({
+      RequestItems: {
+        [table.name]: {
+          Keys: unProcessedKeys.length > 0 ? unProcessedKeys : keys,
+          ProjectionExpression: fieldsToProject
+            ? fieldsToProject.join(',')
+            : undefined,
         },
-      })
-      .promise();
+      },
+    }));
 
     if (result.UnprocessedKeys && result.UnprocessedKeys[table.name]) {
       unProcessedKeys = result.UnprocessedKeys[table.name].Keys;

@@ -1,4 +1,4 @@
-import { BatchGetItemInput } from 'aws-sdk/clients/dynamodb';
+import { BatchGetCommand } from '@aws-sdk/lib-dynamodb';
 import fill from 'lodash/fill';
 import { testClient, testTableConf } from '../testUtils';
 import { batchGetItems as batchGetItemsMethod } from './batchGetItems';
@@ -9,29 +9,25 @@ describe('batchGetItems', () => {
     testClient,
     testTableConf,
   );
-  const spy = jest.spyOn(testClient, 'batchGet');
+  const spy = jest.spyOn(testClient, 'send');
 
   beforeEach(() => {
     spy.mockClear();
-    spy.mockReturnValue({
-      promise: jest.fn().mockResolvedValue({
-        Responses: {
-          [testTableConf.name]: [],
-        },
-      }),
+    spy.mockResolvedValue({
+      Responses: {
+        [testTableConf.name]: [],
+      },
     });
   });
 
   test('returns list of matching items', async () => {
     await expect(batchGetItems([])).resolves.toHaveLength(0);
     spy.mockImplementation(() => {
-      return {
-        promise: jest.fn().mockResolvedValue({
-          Responses: {
-            [testTableConf.name]: [{ id: 'xxxx' }],
-          },
-        }),
-      };
+      return Promise.resolve({
+        Responses: {
+          [testTableConf.name]: [{ id: 'xxxx' }],
+        },
+      });
     });
     await expect(
       batchGetItems([{ pk: 'xxxx', sk: 'yyyy' }]),
@@ -47,14 +43,13 @@ describe('batchGetItems', () => {
   });
 
   test('chunks requests into 100s', async () => {
-    spy.mockImplementation((params: BatchGetItemInput) => {
-      return {
-        promise: jest.fn().mockResolvedValue({
-          Responses: {
-            [testTableConf.name]: params.RequestItems[testTableConf.name].Keys,
-          },
-        }),
-      };
+    spy.mockImplementation((command: any) => {
+      const params = command.input;
+      return Promise.resolve({
+        Responses: {
+          [testTableConf.name]: params.RequestItems[testTableConf.name].Keys,
+        },
+      });
     });
 
     await expect(batchGetItems([{}, {}]));
@@ -67,23 +62,22 @@ describe('batchGetItems', () => {
   });
 
   test('returns all matches if pagination is not enabled', async () => {
-    spy.mockImplementation((params: BatchGetItemInput) => {
+    spy.mockImplementation((command: any) => {
+      const params = command.input;
       const isFirstRequest =
         params.RequestItems[testTableConf.name].Keys[0].pk === 'xxxx';
-      return {
-        promise: jest.fn().mockResolvedValue({
-          Responses: {
-            [testTableConf.name]: [
-              isFirstRequest ? { id: 'xxxx' } : { id: 'yyyy' },
-            ],
+      return Promise.resolve({
+        Responses: {
+          [testTableConf.name]: [
+            isFirstRequest ? { id: 'xxxx' } : { id: 'yyyy' },
+          ],
+        },
+        UnprocessedKeys: {
+          [testTableConf.name]: {
+            Keys: isFirstRequest ? [{ pk: 'aaaa', sk: 'bbbb' }] : [],
           },
-          UnprocessedKeys: {
-            [testTableConf.name]: {
-              Keys: isFirstRequest ? [{ pk: 'aaaa', sk: 'bbbb' }] : [],
-            },
-          },
-        }),
-      };
+        },
+      });
     });
 
     await batchGetItems([
@@ -95,26 +89,30 @@ describe('batchGetItems', () => {
 
   test('fields to project', async () => {
     await batchGetItems([{ pk: 'xxxx', sk: 'yyyy' }], ['id']);
-    expect(spy).toHaveBeenCalledWith({
-      RequestItems: {
-        [testTableConf.name]: {
-          Keys: [{ pk: 'xxxx', sk: 'yyyy' }],
-          ProjectionExpression: 'id,pk,sk',
+    expect(spy).toHaveBeenCalledWith(expect.objectContaining({
+      input: {
+        RequestItems: {
+          [testTableConf.name]: {
+            Keys: [{ pk: 'xxxx', sk: 'yyyy' }],
+            ProjectionExpression: 'id,pk,sk',
+          },
         },
-      },
-    });
+      }
+    }));
   });
 
   test('fields to project including primary keys', async () => {
     await batchGetItems([{ pk: 'xxxx', sk: 'yyyy' }], ['id', 'pk', 'sk']);
-    expect(spy).toHaveBeenCalledWith({
-      RequestItems: {
-        [testTableConf.name]: {
-          Keys: [{ pk: 'xxxx', sk: 'yyyy' }],
-          ProjectionExpression: 'id,pk,sk',
+    expect(spy).toHaveBeenCalledWith(expect.objectContaining({
+      input: {
+        RequestItems: {
+          [testTableConf.name]: {
+            Keys: [{ pk: 'xxxx', sk: 'yyyy' }],
+            ProjectionExpression: 'id,pk,sk',
+          },
         },
-      },
-    });
+      }
+    }));
   });
 
   test('fields to project with different key names', async () => {
@@ -132,27 +130,27 @@ describe('batchGetItems', () => {
       [{ pk: 'xxxx', sk: 'yyyy' }],
       ['id'],
     );
-    expect(spy).toHaveBeenCalledWith({
-      RequestItems: {
-        [testTableConf.name]: {
-          Keys: [{ pk: 'xxxx', sk: 'yyyy' }],
-          ProjectionExpression: 'id,key1,key2',
+    expect(spy).toHaveBeenCalledWith(expect.objectContaining({
+      input: {
+        RequestItems: {
+          [testTableConf.name]: {
+            Keys: [{ pk: 'xxxx', sk: 'yyyy' }],
+            ProjectionExpression: 'id,key1,key2',
+          },
         },
-      },
-    });
+      }
+    }));
   });
 
   test('result is in the same order as keys', async () => {
-    spy.mockReturnValue({
-      promise: jest.fn().mockResolvedValueOnce({
-        Responses: {
-          [testTableConf.name]: [
-            { pk: '5', sk: '6', id: 'c' },
-            { pk: '1', sk: '2', id: 'a' },
-            { pk: '3', sk: '4', id: 'b' },
-          ],
-        },
-      }),
+    spy.mockResolvedValueOnce({
+      Responses: {
+        [testTableConf.name]: [
+          { pk: '5', sk: '6', id: 'c' },
+          { pk: '1', sk: '2', id: 'a' },
+          { pk: '3', sk: '4', id: 'b' },
+        ],
+      },
     });
 
     const result = await batchGetItems(

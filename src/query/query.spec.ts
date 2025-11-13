@@ -1,4 +1,3 @@
-import { QueryInput, QueryOutput } from 'aws-sdk/clients/dynamodb';
 import { testClient, testTableConf } from '../testUtils';
 import { Where } from '../types';
 import { query as queryMethod } from './query';
@@ -6,9 +5,7 @@ import { query as queryMethod } from './query';
 describe('query', () => {
   const query = queryMethod.bind(null, testClient, testTableConf);
 
-  jest.spyOn(testClient, 'query').mockReturnValue({
-    promise: jest.fn().mockResolvedValue({ Items: [] }),
-  });
+  jest.spyOn(testClient, 'send').mockResolvedValue({ Items: [] });
 
   test('with only partition key', async () => {
     await query({
@@ -17,16 +14,18 @@ describe('query', () => {
       },
     });
 
-    expect(testClient.query).toHaveBeenCalledWith({
-      TableName: testTableConf.name,
-      KeyConditionExpression: '#PK = :pk',
-      ExpressionAttributeNames: {
-        '#PK': 'pk',
-      },
-      ExpressionAttributeValues: {
-        ':pk': 'xxxx',
-      },
-    });
+    expect(testClient.send).toHaveBeenCalledWith(expect.objectContaining({
+      input: {
+        TableName: testTableConf.name,
+        KeyConditionExpression: '#PK = :pk',
+        ExpressionAttributeNames: {
+          '#PK': 'pk',
+        },
+        ExpressionAttributeValues: {
+          ':pk': 'xxxx',
+        },
+      }
+    }));
   });
 
   test('input validation', async () => {
@@ -61,33 +60,34 @@ describe('query', () => {
       'reverse',
     );
 
-    expect(testClient.query).toHaveBeenCalledWith({
-      TableName: testTableConf.name,
-      IndexName: 'reverse',
-      KeyConditionExpression: '#SK = :sk',
-      ExpressionAttributeNames: {
-        '#SK': 'sk',
-      },
-      ExpressionAttributeValues: {
-        ':sk': 'xxxx',
-      },
-    });
+    expect(testClient.send).toHaveBeenCalledWith(expect.objectContaining({
+      input: {
+        TableName: testTableConf.name,
+        IndexName: 'reverse',
+        KeyConditionExpression: '#SK = :sk',
+        ExpressionAttributeNames: {
+          '#SK': 'sk',
+        },
+        ExpressionAttributeValues: {
+          ':sk': 'xxxx',
+        },
+      }
+    }));
   });
 
   test('result if pagination is not enabled has all items', async () => {
-    testClient.query = jest.fn().mockImplementation((params: QueryInput) => {
+    testClient.send = jest.fn().mockImplementation((command) => {
+      const params = command.input;
       const isFirstRequest = params.ExclusiveStartKey === undefined;
-      return {
-        promise: jest.fn().mockResolvedValue({
-          Items: [isFirstRequest ? { id: 'xxxx' } : { id: 'yyyy' }],
-          LastEvaluatedKey: isFirstRequest ? { pk: 'xxxx' } : undefined,
-        } as QueryOutput),
-      };
+      return Promise.resolve({
+        Items: [isFirstRequest ? { id: 'xxxx' } : { id: 'yyyy' }],
+        LastEvaluatedKey: isFirstRequest ? { pk: 'xxxx' } : undefined,
+      });
     });
 
     await query({
       where: { pk: 'xxxx' },
     });
-    expect(testClient.query).toHaveBeenCalledTimes(2);
+    expect(testClient.send).toHaveBeenCalledTimes(2);
   });
 });

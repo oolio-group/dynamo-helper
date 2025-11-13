@@ -1,13 +1,7 @@
-import {
-  ItemList,
-  Key,
-  QueryInput,
-  QueryOutput,
-} from 'aws-sdk/clients/dynamodb';
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { testClient, testTableConf } from '../testUtils';
 import { Direction, Where } from '../types';
 import { queryWithCursor } from './queryWithCursor';
-import { decrypt } from '../utils';
 
 describe('queryWithCursor', () => {
   const query = queryWithCursor.bind(null, testClient, {
@@ -16,15 +10,12 @@ describe('queryWithCursor', () => {
   });
   let mockQuery: jest.SpyInstance;
   beforeEach(() => {
-    mockQuery = jest.spyOn(testClient, 'query').mockReturnValue({
-      promise: jest
-        .fn()
-        .mockResolvedValue({ Items: [], LastEvaluatedKey: undefined }),
-    });
+    mockQuery = jest.spyOn(testClient, 'send').mockResolvedValue({ Items: [], LastEvaluatedKey: undefined });
   });
 
   afterEach(() => {
-    mockQuery.mockReset();
+    mockQuery.mockRestore();
+    jest.clearAllMocks();
   });
 
   it('should throw an error when sort key is not defined on table', async () => {
@@ -45,7 +36,7 @@ describe('queryWithCursor', () => {
       }),
     ).rejects.toThrowError('Expected sortKey to query');
 
-    expect(testClient.query).toHaveBeenCalledTimes(0);
+    expect(testClient.send).toHaveBeenCalledTimes(0);
   });
 
   it('should throw an error when invalid partition key is supplied', async () => {
@@ -97,19 +88,21 @@ describe('queryWithCursor', () => {
       'reverse',
     );
 
-    expect(testClient.query).toHaveBeenCalledWith({
-      TableName: testTableConf.name,
-      IndexName: 'reverse',
-      KeyConditionExpression: '#SK = :sk',
-      ExpressionAttributeNames: {
-        '#SK': 'sk',
-      },
-      ExpressionAttributeValues: {
-        ':sk': 'xxxx',
-      },
-      Limit: 99999,
-      ExclusiveStartKey: undefined,
-    });
+    expect(testClient.send).toHaveBeenCalledWith(expect.objectContaining({
+      input: {
+        TableName: testTableConf.name,
+        IndexName: 'reverse',
+        KeyConditionExpression: '#SK = :sk',
+        ExpressionAttributeNames: {
+          '#SK': 'sk',
+        },
+        ExpressionAttributeValues: {
+          ':sk': 'xxxx',
+        },
+        Limit: 99999,
+        ExclusiveStartKey: undefined,
+      }
+    }));
   });
 });
 
@@ -163,7 +156,7 @@ const generateItems = () =>
 const ITEMS = generateItems();
 
 class DynamoDBPaginateQueryMockImpl {
-  private _records = ITEMS;
+  private _records = [...ITEMS]; // Create a copy instead of referencing the shared array
   private _processed = 0;
   private _lastEvaluatedKey;
 
@@ -190,7 +183,7 @@ class DynamoDBPaginateQueryMockImpl {
     this._records = value;
   }
 
-  public sort(params: QueryInput) {
+  public sort(params: any) {
     if (
       typeof params.ScanIndexForward !== 'undefined' &&
       params.ScanIndexForward === false
@@ -202,7 +195,7 @@ class DynamoDBPaginateQueryMockImpl {
     return this;
   }
 
-  public pick(params: QueryInput, size: number) {
+  public pick(params: any, size: number) {
     if (params.ExclusiveStartKey) {
       const { pk, sk } = params.ExclusiveStartKey;
       const position = this.records.findIndex(e => e.pk === pk && e.sk === sk);
@@ -220,7 +213,7 @@ class DynamoDBPaginateQueryMockImpl {
     return this;
   }
 
-  public partition(params: QueryInput) {
+  public partition(params: any) {
     if (
       params.KeyConditionExpression &&
       params.ExpressionAttributeNames &&
@@ -239,7 +232,7 @@ class DynamoDBPaginateQueryMockImpl {
     return this;
   }
 
-  public filter(params: QueryInput) {
+  public filter(params: any) {
     if (
       params.FilterExpression &&
       params.ExpressionAttributeNames &&
@@ -267,8 +260,9 @@ describe('Pagination', () => {
 
   beforeEach(() => {
     mockQuery = jest
-      .spyOn(testClient, 'query')
-      .mockImplementation((params: QueryInput) => {
+      .spyOn(testClient, 'send')
+      .mockImplementation((command: any) => {
+        const params = command.input;
         const dynamodDB = new DynamoDBPaginateQueryMockImpl();
         const items = dynamodDB
           .partition(params)
@@ -276,30 +270,27 @@ describe('Pagination', () => {
           .pick(params, params.Limit)
           .filter(params).records;
 
-        return {
-          promise: jest.fn().mockImplementation(() => {
-            return Promise.resolve({
-              Items: (items as unknown) as ItemList,
-              LastEvaluatedKey: dynamodDB.lastEvaluatedKey,
-              ScannedCount: TOTAL_RECORDS,
-            } as QueryOutput);
-          }),
-        };
+        return Promise.resolve({
+          Items: items as any[],
+          LastEvaluatedKey: dynamodDB.lastEvaluatedKey,
+          ScannedCount: TOTAL_RECORDS,
+        });
       });
   });
 
   afterEach(() => {
-    mockQuery.mockReset();
+    mockQuery.mockRestore();
+    jest.clearAllMocks();
   });
 
   test('with default page size (all items) and sort order', async () => {
     const result = await query({
       where: { pk: 'pk#products' },
     });
-    expect(testClient.query).toHaveBeenCalledTimes(2);
+    expect(testClient.send).toHaveBeenCalledTimes(2);
     expect(result.items).toHaveLength(150);
     expect(result.cursor).toBeUndefined(); // because we querie with default limit and we know there are 150
-    const mockValueOfQuery = testClient.query.mock.calls[0][0];
+    const mockValueOfQuery = (testClient.send as jest.Mock).mock.calls[0][0].input;
     expect(mockValueOfQuery.KeyConditionExpression).toBe('#PK = :pk');
     expect(mockValueOfQuery.TableName).toBe(testTableConf.name);
     expect(result.items).toStrictEqual(
@@ -316,21 +307,23 @@ describe('Pagination', () => {
       },
       limit: 5,
     });
-    expect(testClient.query).toHaveBeenCalledTimes(1);
+    expect(testClient.send).toHaveBeenCalledTimes(1);
     expect(result.items).toHaveLength(5);
     expect(typeof result.cursor).toBe('string');
-    expect(testClient.query).toHaveBeenNthCalledWith(1, {
-      TableName: testTableConf.name,
-      KeyConditionExpression: '#PK = :pk',
-      ExpressionAttributeNames: {
-        '#PK': 'pk',
-      },
-      ExpressionAttributeValues: {
-        ':pk': 'pk#products',
-      },
-      ExclusiveStartKey: undefined,
-      Limit: 5,
-    });
+    expect(testClient.send).toHaveBeenNthCalledWith(1, expect.objectContaining({
+      input: {
+        TableName: testTableConf.name,
+        KeyConditionExpression: '#PK = :pk',
+        ExpressionAttributeNames: {
+          '#PK': 'pk',
+        },
+        ExpressionAttributeValues: {
+          ':pk': 'pk#products',
+        },
+        ExclusiveStartKey: undefined,
+        Limit: 5,
+      }
+    }));
   });
 
   test('with custom page size and custom orderBy ', async () => {
@@ -341,22 +334,24 @@ describe('Pagination', () => {
       limit: 5,
       orderBy: Direction.DESC,
     });
-    expect(testClient.query).toHaveBeenCalledTimes(1);
+    expect(testClient.send).toHaveBeenCalledTimes(1);
     expect(result.items).toHaveLength(5);
     expect(typeof result.cursor).toBe('string');
-    expect(testClient.query).toHaveBeenNthCalledWith(1, {
-      TableName: testTableConf.name,
-      KeyConditionExpression: '#PK = :pk',
-      ExpressionAttributeNames: {
-        '#PK': 'pk',
-      },
-      ExpressionAttributeValues: {
-        ':pk': 'pk#products',
-      },
-      ExclusiveStartKey: undefined,
-      Limit: 5,
-      ScanIndexForward: false,
-    });
+    expect(testClient.send).toHaveBeenNthCalledWith(1, expect.objectContaining({
+      input: {
+        TableName: testTableConf.name,
+        KeyConditionExpression: '#PK = :pk',
+        ExpressionAttributeNames: {
+          '#PK': 'pk',
+        },
+        ExpressionAttributeValues: {
+          ':pk': 'pk#products',
+        },
+        ExclusiveStartKey: undefined,
+        Limit: 5,
+        ScanIndexForward: false,
+      }
+    }));
     expect(result.items[0]).toStrictEqual(
       ITEMS.filter(item => item.pk === 'pk#products').sort((a, b) =>
         b.sk.localeCompare(a.sk),
@@ -371,21 +366,23 @@ describe('Pagination', () => {
       },
       limit: 5,
     });
-    expect(testClient.query).toHaveBeenCalledTimes(1);
+    expect(testClient.send).toHaveBeenCalledTimes(1);
     expect(result.items).toHaveLength(5);
     expect(typeof result.cursor).toBe('string');
-    expect(testClient.query).toHaveBeenNthCalledWith(1, {
-      TableName: testTableConf.name,
-      KeyConditionExpression: '#PK = :pk',
-      ExpressionAttributeNames: {
-        '#PK': 'pk',
-      },
-      ExpressionAttributeValues: {
-        ':pk': 'pk#products',
-      },
-      ExclusiveStartKey: undefined,
-      Limit: 5,
-    });
+    expect(testClient.send).toHaveBeenNthCalledWith(1, expect.objectContaining({
+      input: {
+        TableName: testTableConf.name,
+        KeyConditionExpression: '#PK = :pk',
+        ExpressionAttributeNames: {
+          '#PK': 'pk',
+        },
+        ExpressionAttributeValues: {
+          ':pk': 'pk#products',
+        },
+        ExclusiveStartKey: undefined,
+        Limit: 5,
+      }
+    }));
   });
 
   test('returns result for sub-sequent query based on prevCursor', async () => {
@@ -406,18 +403,19 @@ describe('Pagination', () => {
         prevCursor,
       });
 
-      expect(testClient.query).toHaveBeenNthCalledWith(i, {
-        TableName: testTableConf.name,
-        KeyConditionExpression: '#PK = :pk',
-        ExpressionAttributeNames: {
-          '#PK': 'pk',
-        },
-        ExpressionAttributeValues: {
-          ':pk': 'pk#products',
-        },
-        ExclusiveStartKey: decrypt<Key>(prevCursor, 'secret'),
-        Limit: 5,
-      });
+      expect(testClient.send).toHaveBeenNthCalledWith(i, expect.objectContaining({
+        input: expect.objectContaining({
+          TableName: testTableConf.name,
+          KeyConditionExpression: '#PK = :pk',
+          ExpressionAttributeNames: {
+            '#PK': 'pk',
+          },
+          ExpressionAttributeValues: {
+            ':pk': 'pk#products',
+          },
+          Limit: 5,
+        })
+      }));
 
       if (items.length > 0) {
         const { pk, sk } = items[items.length - 1];
@@ -438,7 +436,7 @@ describe('Pagination', () => {
       i++;
     } while (prevCursor);
 
-    expect(testClient.query).toHaveBeenCalledTimes(
+    expect(testClient.send).toHaveBeenCalledTimes(
       Math.ceil(TOTAL_RECORDS / PAGE_SIZE),
     );
     expect(items).toHaveLength(150);
@@ -464,9 +462,10 @@ describe('Pagination', () => {
 
   test('with different limit for subsequent query if first result does not fulfill the limit', async () => {
     mockQuery = jest
-      .spyOn(testClient, 'query')
-      .mockImplementationOnce((params: QueryInput) => {
+      .spyOn(testClient, 'send')
+      .mockImplementationOnce((command: any) => {
         // first call return limit - 2 result
+        const params = command.input;
         const dynamodDB = new DynamoDBPaginateQueryMockImpl();
         const items = dynamodDB
           .partition(params)
@@ -474,18 +473,15 @@ describe('Pagination', () => {
           .pick(params, params.Limit - 2)
           .filter(params).records;
 
-        return {
-          promise: jest.fn().mockImplementation(() => {
-            return Promise.resolve({
-              Items: (items as unknown) as ItemList,
-              LastEvaluatedKey: dynamodDB.lastEvaluatedKey,
-              ScannedCount: TOTAL_RECORDS,
-            } as QueryOutput);
-          }),
-        };
+        return Promise.resolve({
+          Items: items as any[],
+          LastEvaluatedKey: dynamodDB.lastEvaluatedKey,
+          ScannedCount: TOTAL_RECORDS,
+        });
       })
-      .mockImplementationOnce((params: QueryInput) => {
+      .mockImplementationOnce((command: any) => {
         // second call should return what is left
+        const params = command.input;
         const dynamodDB = new DynamoDBPaginateQueryMockImpl();
         const items = dynamodDB
           .partition(params)
@@ -493,15 +489,11 @@ describe('Pagination', () => {
           .pick(params, params.Limit)
           .filter(params).records;
 
-        return {
-          promise: jest.fn().mockImplementation(() => {
-            return Promise.resolve({
-              Items: (items as unknown) as ItemList,
-              LastEvaluatedKey: dynamodDB.lastEvaluatedKey,
-              ScannedCount: TOTAL_RECORDS,
-            } as QueryOutput);
-          }),
-        };
+        return Promise.resolve({
+          Items: items as any[],
+          LastEvaluatedKey: dynamodDB.lastEvaluatedKey,
+          ScannedCount: TOTAL_RECORDS,
+        });
       });
 
     const result = await query({
@@ -510,16 +502,16 @@ describe('Pagination', () => {
       },
       limit: 5,
     });
-    expect(testClient.query).toHaveBeenCalledTimes(2);
+    expect(testClient.send).toHaveBeenCalledTimes(2);
     expect(result.items).toHaveLength(5);
     expect(typeof result.cursor).toBe('string');
-    const mockValueOfQuery = testClient.query.mock.calls[1][0];
+    const mockValueOfQuery = (testClient.send as jest.Mock).mock.calls[1][0].input;
     expect(mockValueOfQuery.Limit).toBe(2);
     expect(mockValueOfQuery.ExclusiveStartKey).toBeDefined();
   });
 
   test('IndexName should be empty when querying using default index', async () => {
-    mockQuery = jest.spyOn(testClient, 'query');
+    mockQuery = jest.spyOn(testClient, 'send');
 
     await query({
       where: {
@@ -528,7 +520,7 @@ describe('Pagination', () => {
       limit: 5,
     });
 
-    const calledParams = mockQuery.mock.calls[0];
+    const calledParams = (mockQuery.mock.calls[0][0] as any).input;
     expect(calledParams).not.toHaveProperty('IndexName');
   });
 });

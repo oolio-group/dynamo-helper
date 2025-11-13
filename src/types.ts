@@ -1,5 +1,4 @@
-import { DynamoDB } from 'aws-sdk';
-import { DocumentClient } from 'aws-sdk/clients/dynamodb';
+import type { QueryCommandInput } from '@aws-sdk/lib-dynamodb';
 
 /**
  * Objects with open properties
@@ -9,7 +8,12 @@ export interface AnyObject {
   [property: string]: any;
 }
 
-export type QueryInput = DynamoDB.DocumentClient.QueryInput;
+/**
+ * DynamoDB key type - a record of attribute names to values
+ */
+export type Key = Record<string, unknown>;
+
+export type QueryInput = QueryCommandInput;
 
 /**
  * DynamoDB supported operators
@@ -211,7 +215,7 @@ export type ConditionExpressionInput =
   | AndOrExpression;
 
 export interface ConditionExpressionReturn {
-  expression: DocumentClient.ConditionExpression;
-  attrValues: DocumentClient.ExpressionAttributeValueMap;
-  attrNames: DocumentClient.ExpressionAttributeNameMap;
+  expression: string;
+  attrValues: Record<string, unknown>;
+  attrNames: Record<string, string>;
 }
