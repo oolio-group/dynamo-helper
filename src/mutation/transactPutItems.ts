@@ -1,6 +1,4 @@
-import { AWSError } from 'aws-sdk';
-import { DocumentClient, TransactWriteItem } from 'aws-sdk/clients/dynamodb';
-import { PromiseResult } from 'aws-sdk/lib/request';
+import { DynamoDBDocumentClient, TransactWriteCommand, TransactWriteCommandOutput } from '@aws-sdk/lib-dynamodb';
 import { AnyObject, TableConfig } from '../types';
 
 /**
@@ -9,18 +7,16 @@ import { AnyObject, TableConfig } from '../types';
  * @param items List of items
  */
 export function transactPutItems(
-  dbClient: DocumentClient,
+  dbClient: DynamoDBDocumentClient,
   table: TableConfig,
   items: Array<AnyObject>,
-): Promise<PromiseResult<DocumentClient.TransactWriteItemsOutput, AWSError>> {
-  return dbClient
-    .transactWrite({
-      TransactItems: items.map<TransactWriteItem>(x => ({
-        Put: {
-          TableName: table.name,
-          Item: x,
-        },
-      })),
-    })
-    .promise();
+): Promise<TransactWriteCommandOutput> {
+  return dbClient.send(new TransactWriteCommand({
+    TransactItems: items.map(x => ({
+      Put: {
+        TableName: table.name,
+        Item: x,
+      },
+    })),
+  }));
 }

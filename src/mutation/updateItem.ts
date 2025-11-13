@@ -1,21 +1,20 @@
-import { DocumentClient } from 'aws-sdk/clients/dynamodb';
+import { DynamoDBDocumentClient, UpdateCommand, UpdateCommandInput, UpdateCommandOutput } from '@aws-sdk/lib-dynamodb';
 import {
   AnyObject,
   ConditionExpressionInput,
   ConditionExpressionKind,
   ConditionExpressionReturn,
   TableConfig,
+  Key,
 } from '../types';
 import { keyOperatorLookup } from '../query/queryBuilder';
-import { PromiseResult } from 'aws-sdk/lib/request';
-import { AWSError } from 'aws-sdk';
 
 const buildConditionExpressions = (
   conditionExpression: ConditionExpressionInput[],
 ): ConditionExpressionReturn => {
   let expression = '';
-  const attrValues: DocumentClient.ExpressionAttributeValueMap = {};
-  const attrNames: DocumentClient.ExpressionAttributeNameMap = {};
+  const attrValues: Record<string, unknown> = {};
+  const attrNames: Record<string, string> = {};
   for (let i = 0; i < conditionExpression.length; i++) {
     const currentExpression = conditionExpression[i];
     if (currentExpression.kind === ConditionExpressionKind.AndOr) {
@@ -76,12 +75,12 @@ const buildUpdateExpressions = (item: object): ConditionExpressionReturn => {
  * @returns
  */
 export async function updateItem<T extends AnyObject>(
-  dbClient: DocumentClient,
+  dbClient: DynamoDBDocumentClient,
   table: TableConfig,
-  key: DocumentClient.Key,
+  key: Key,
   conditions: ConditionExpressionInput[],
   item: T,
-): Promise<PromiseResult<DocumentClient.UpdateItemOutput, AWSError>> {
+): Promise<UpdateCommandOutput> {
   if (!key || typeof key !== 'object' || Object.keys(key).length === 0) {
     throw new Error('Expected key to be of type object and not empty');
   }
@@ -94,7 +93,7 @@ export async function updateItem<T extends AnyObject>(
   delete obj[table.indexes.default.sortKeyName];
   const updateExpr = buildUpdateExpressions(obj);
 
-  const params: DocumentClient.UpdateItemInput = {
+  const params: UpdateCommandInput = {
     TableName: table.name,
     Key: key,
     ConditionExpression: conditionExpr.expression,
@@ -107,5 +106,5 @@ export async function updateItem<T extends AnyObject>(
       Object.assign({}, conditionExpr.attrValues, updateExpr.attrValues),
   };
 
-  return dbClient.update(params).promise();
+  return dbClient.send(new UpdateCommand(params));
 }

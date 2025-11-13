@@ -1,7 +1,5 @@
 import { AnyObject, TableConfig } from '../types';
-import { DocumentClient } from 'aws-sdk/clients/dynamodb';
-import { PromiseResult } from 'aws-sdk/lib/request';
-import { AWSError } from 'aws-sdk';
+import { DynamoDBDocumentClient, PutCommand, PutCommandOutput } from '@aws-sdk/lib-dynamodb';
 
 /**
  * Writes item in database.
@@ -9,10 +7,10 @@ import { AWSError } from 'aws-sdk';
  * @param item object to put
  */
 export async function putItem<T extends AnyObject>(
-  dbClient: DocumentClient,
+  dbClient: DynamoDBDocumentClient,
   table: TableConfig,
   item: T
-): Promise<PromiseResult<DocumentClient.PutItemOutput, AWSError>> {
+): Promise<PutCommandOutput> {
   if (item === null || item === undefined) {
     throw new Error(`Expected on argument of type object received ${item}`);
   } else if (typeof item !== 'object') {
@@ -21,10 +19,8 @@ export async function putItem<T extends AnyObject>(
     );
   }
 
-  return dbClient
-    .put({
-      Item: item,
-      TableName: table.name,
-    })
-    .promise();
+  return dbClient.send(new PutCommand({
+    Item: item,
+    TableName: table.name,
+  }));
 }

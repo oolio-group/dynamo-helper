@@ -1,7 +1,5 @@
-import { AWSError } from 'aws-sdk';
-import { DocumentClient } from 'aws-sdk/clients/dynamodb';
-import { PromiseResult } from 'aws-sdk/lib/request';
-import { TableConfig } from '../types';
+import { DynamoDBDocumentClient, DeleteCommand, DeleteCommandOutput } from '@aws-sdk/lib-dynamodb';
+import { TableConfig, Key } from '../types';
 
 /**
  * Delete item matching specified key
@@ -9,10 +7,10 @@ import { TableConfig } from '../types';
  * @param sk sort key value
  */
 export async function deleteItem(
-  dbClient: DocumentClient,
+  dbClient: DynamoDBDocumentClient,
   table: TableConfig,
-  key: DocumentClient.Key,
-): Promise<PromiseResult<DocumentClient.DeleteItemOutput, AWSError>> {
+  key: Key,
+): Promise<DeleteCommandOutput> {
   const index = table.indexes.default;
 
   if (!key || typeof key !== 'object' || Object.keys(key).length === 0) {
@@ -25,10 +23,8 @@ export async function deleteItem(
     );
   }
 
-  return dbClient
-    .delete({
-      TableName: table.name,
-      Key: key,
-    })
-    .promise();
+  return dbClient.send(new DeleteCommand({
+    TableName: table.name,
+    Key: key,
+  }));
 }

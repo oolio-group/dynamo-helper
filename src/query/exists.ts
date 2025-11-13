@@ -1,6 +1,6 @@
-import { DocumentClient } from 'aws-sdk/clients/dynamodb';
+import { DynamoDBDocumentClient } from '@aws-sdk/lib-dynamodb';
 import { getItem } from './getItem';
-import { TableConfig } from '../types';
+import { TableConfig, Key } from '../types';
 
 /**
  * Checks if an item with a given pk sk combo exists in DB or not
@@ -9,9 +9,9 @@ import { TableConfig } from '../types';
  * @returns {Boolean} exists or not
  */
 export async function exists(
-  dbClient: DocumentClient,
+  dbClient: DynamoDBDocumentClient,
   table: TableConfig,
-  key: DocumentClient.Key,
+  key: Key,
 ): Promise<boolean> {
   const item = await getItem(dbClient, table, key, ['id']);
   return item ? true : false;

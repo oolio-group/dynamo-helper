@@ -1,5 +1,5 @@
-import { DocumentClient } from 'aws-sdk/clients/dynamodb';
-import { TableConfig } from '../types';
+import { DynamoDBDocumentClient } from '@aws-sdk/lib-dynamodb';
+import { TableConfig, Key } from '../types';
 import { batchGetItems } from './batchGetItems';
 
 /**
@@ -8,10 +8,10 @@ import { batchGetItems } from './batchGetItems';
  * @returns list of keys that doesn't exist in DB, empty of all keys exists
  */
 export async function batchExists(
-  dbClient: DocumentClient,
+  dbClient: DynamoDBDocumentClient,
   table: TableConfig,
-  keys: Array<DocumentClient.Key>,
-): Promise<Array<DocumentClient.Key>> {
+  keys: Array<Key>,
+): Promise<Array<Key>> {
   const index = table.indexes.default;
   const result = (
     await batchGetItems(dbClient, table, keys, [

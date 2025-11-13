@@ -3,12 +3,10 @@ import { exists as existsMethod } from './exists';
 
 describe('exists', () => {
   const exists = existsMethod.bind(null, testClient, testTableConf);
-  const spy = jest.spyOn(testClient, 'get');
+  const spy = jest.spyOn(testClient, 'send');
 
   beforeEach(() => {
-    spy.mockReturnValue({
-      promise: jest.fn().mockResolvedValue({ Item: null }),
-    });
+    spy.mockResolvedValue({ Item: null });
   });
 
   test('validates arguments', async () => {
@@ -31,9 +29,7 @@ describe('exists', () => {
     // getItem will return null in this case
     await expect(exists({ pk: 'xxxx', sk: 'yyyy' })).resolves.toBe(false);
 
-    spy.mockReturnValue({
-      promise: jest.fn().mockResolvedValue({ Item: { id: 'xxxx' } }),
-    });
+    spy.mockResolvedValue({ Item: { id: 'xxxx' } });
 
     await expect(exists({ pk: 'xxxx', sk: 'yyyy' })).resolves.toBe(true);
   });

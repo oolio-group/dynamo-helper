@@ -1,13 +1,12 @@
-import { AWSError } from 'aws-sdk';
-import {
-  BatchWriteItemOutput,
-  DeleteItemOutput,
-  DocumentClient,
-  PutItemOutput,
-  TransactWriteItemsOutput,
-  UpdateItemOutput,
-} from 'aws-sdk/clients/dynamodb';
-import { PromiseResult } from 'aws-sdk/lib/request';
+import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
+import { DynamoDBDocumentClient } from '@aws-sdk/lib-dynamodb';
+import type {
+  BatchWriteCommandOutput,
+  DeleteCommandOutput,
+  PutCommandOutput,
+  TransactWriteCommandOutput,
+  UpdateCommandOutput,
+} from '@aws-sdk/lib-dynamodb';
 import { batchDeleteItems } from './mutation/batchDeleteItems';
 import { batchPutItems } from './mutation/batchPutItems';
 import { deleteItem } from './mutation/deleteItem';
@@ -25,11 +24,12 @@ import {
   ConditionExpressionInput,
   Filter,
   TableConfig,
+  Key,
 } from './types';
 
 export class DynamoHelper {
   table: TableConfig;
-  dbClient: DocumentClient;
+  dbClient: DynamoDBDocumentClient;
 
   /**
    * Create a DynamoHelper object
@@ -38,10 +38,11 @@ export class DynamoHelper {
    * @param {string} endpoint - The endpoint of the database
    */
   constructor(table: TableConfig, region?: string, endpoint?: string) {
-    this.dbClient = new DocumentClient({
+    const client = new DynamoDBClient({
       region,
       endpoint,
     });
+    this.dbClient = DynamoDBDocumentClient.from(client);
     this.table = table;
   }
 
@@ -60,7 +61,7 @@ export class DynamoHelper {
   }
 
   async getItem<T extends AnyObject>(
-    key: DocumentClient.Key,
+    key: Key,
     fields?: Array<keyof T>,
   ): Promise<T> {
     return getItem(this.dbClient, this.table, key, fields);
@@ -74,51 +75,51 @@ export class DynamoHelper {
     return batchGetItems(this.dbClient, this.table, keys, fields);
   }
 
-  async exists(key: DocumentClient.Key): Promise<boolean> {
+  async exists(key: Key): Promise<boolean> {
     return exists(this.dbClient, this.table, key);
   }
 
   async batchExists(
-    keys: Array<DocumentClient.Key>,
-  ): Promise<Array<DocumentClient.Key>> {
+    keys: Array<Key>,
+  ): Promise<Array<Key>> {
     return batchExists(this.dbClient, this.table, keys);
   }
 
   async deleteItem(
-    key: DocumentClient.Key,
-  ): Promise<PromiseResult<DeleteItemOutput, AWSError>> {
+    key: Key,
+  ): Promise<DeleteCommandOutput> {
     return deleteItem(this.dbClient, this.table, key);
   }
 
   async batchDeleteItems(
-    keys: Array<DocumentClient.Key>,
-  ): Promise<Array<PromiseResult<BatchWriteItemOutput, AWSError>>> {
+    keys: Array<Key>,
+  ): Promise<Array<BatchWriteCommandOutput>> {
     return batchDeleteItems(this.dbClient, this.table, keys);
   }
 
   async putItem<T extends AnyObject>(
     item: T,
-  ): Promise<PromiseResult<PutItemOutput, AWSError>> {
+  ): Promise<PutCommandOutput> {
     return putItem(this.dbClient, this.table, item);
   }
 
   async batchPutItems(
     items: Array<AnyObject>,
-  ): Promise<Array<PromiseResult<BatchWriteItemOutput, AWSError>>> {
+  ): Promise<Array<BatchWriteCommandOutput>> {
     return batchPutItems(this.dbClient, this.table, items);
   }
 
   async transactPutItems(
     items: Array<AnyObject>,
-  ): Promise<PromiseResult<TransactWriteItemsOutput, AWSError>> {
+  ): Promise<TransactWriteCommandOutput> {
     return transactPutItems(this.dbClient, this.table, items);
   }
 
   async updateItem<T extends AnyObject>(
-    key: DocumentClient.Key,
+    key: Key,
     item: T,
     conditions: ConditionExpressionInput[],
-  ): Promise<PromiseResult<UpdateItemOutput, AWSError>> {
+  ): Promise<UpdateCommandOutput> {
     return updateItem(this.dbClient, this.table, key, conditions, item);
   }
 }

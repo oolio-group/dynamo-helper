@@ -1,4 +1,4 @@
-import { DocumentClient } from 'aws-sdk/clients/dynamodb';
+import { DynamoDBDocumentClient, QueryCommand } from '@aws-sdk/lib-dynamodb';
 import { AnyObject, Filter, TableConfig } from '../types';
 import { buildQueryTableParams } from './queryBuilder';
 
@@ -8,7 +8,7 @@ import { buildQueryTableParams } from './queryBuilder';
  * @returns {Array<T>} list of matching items
  */
 export async function query<T extends AnyObject>(
-  dbClient: DocumentClient,
+  dbClient: DynamoDBDocumentClient,
   table: TableConfig,
   filter: Filter<T>,
   indexName?: string,
@@ -32,7 +32,7 @@ export async function query<T extends AnyObject>(
       params.ExclusiveStartKey = lastEvaluatedKey;
     }
 
-    const result = await dbClient.query(params).promise();
+    const result = await dbClient.send(new QueryCommand(params));
 
     items = items.concat(result.Items as T[]);
 

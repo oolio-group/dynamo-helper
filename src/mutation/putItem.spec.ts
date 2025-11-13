@@ -1,15 +1,13 @@
-import { PutItemInput } from 'aws-sdk/clients/dynamodb';
+import { PutCommand } from '@aws-sdk/lib-dynamodb';
 import { testClient, testTableConf } from '../testUtils';
 import { putItem as putItemMethod } from './putItem';
 
 describe('putItem', () => {
   const putItem = putItemMethod.bind(null, testClient, testTableConf);
-  const spy = jest.spyOn(testClient, 'put');
+  const spy = jest.spyOn(testClient, 'send');
 
   beforeEach(() => {
-    spy.mockReturnValue({
-      promise: jest.fn().mockResolvedValue({}),
-    });
+    spy.mockResolvedValue({});
   });
 
   test('validates input', async () => {
@@ -32,16 +30,16 @@ describe('putItem', () => {
 
   test('uses put to write item to db', async () => {
     await putItem({ pk: 'xxxx', sk: 'yyyy', id: 'xxxx' });
-    expect(spy).toHaveBeenCalledWith({
-      Item: { pk: 'xxxx', sk: 'yyyy', id: 'xxxx' },
-      TableName: testTableConf.name,
-    } as PutItemInput);
+    expect(spy).toHaveBeenCalledWith(expect.objectContaining({
+      input: {
+        Item: { pk: 'xxxx', sk: 'yyyy', id: 'xxxx' },
+        TableName: testTableConf.name,
+      }
+    }));
   });
 
   test('promise rejection', async () => {
-    spy.mockReturnValue({
-      promise: jest.fn().mockRejectedValue({}),
-    });
+    spy.mockRejectedValue({});
 
     await expect(
       putItem({ pk: 'xxxx', sk: 'yyyy', id: 'xxxx' }),
