@@ -12,6 +12,7 @@ import { batchPutItems } from './mutation/batchPutItems';
 import { deleteItem } from './mutation/deleteItem';
 import { putItem } from './mutation/putItem';
 import { transactPutItems } from './mutation/transactPutItems';
+import { transactWriteItems, TransactWriteItem } from './mutation/transactWriteItems';
 import { updateItem } from './mutation/updateItem';
 import { batchExists } from './query/batchExists';
 import { batchGetItems } from './query/batchGetItems';
@@ -113,6 +114,12 @@ export class DynamoHelper {
     items: Array<AnyObject>,
   ): Promise<TransactWriteCommandOutput> {
     return transactPutItems(this.dbClient, this.table, items);
+  }
+
+  async transactWriteItems(
+    transactItems: Array<TransactWriteItem>,
+  ): Promise<TransactWriteCommandOutput> {
+    return transactWriteItems(this.dbClient, this.table, transactItems);
   }
 
   async updateItem<T extends AnyObject>(
