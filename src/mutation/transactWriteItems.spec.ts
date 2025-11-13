@@ -118,7 +118,6 @@ describe('transactWriteItems', () => {
       {
         ConditionCheck: {
           Key: { pk: '1', sk: 'a' },
-          TableName: testTableConf.name,
           ConditionExpression: 'attribute_exists(#pk)',
           ExpressionAttributeNames: { '#pk': 'pk' },
         },
@@ -177,26 +176,6 @@ describe('transactWriteItems', () => {
               ExpressionAttributeNames: { '#status': 'status' },
               ExpressionAttributeValues: { ':val': 'active' },
               TableName: testTableConf.name,
-            },
-          },
-        ],
-      }
-    }));
-  });
-
-  test('preserves custom TableName if provided', async () => {
-    const customTableName = 'custom-table';
-    await transactWriteItems([
-      { Put: { Item: { pk: '1', sk: 'a' }, TableName: customTableName } },
-    ]);
-
-    expect(spy).toHaveBeenCalledWith(expect.objectContaining({
-      input: {
-        TransactItems: [
-          {
-            Put: {
-              Item: { pk: '1', sk: 'a' },
-              TableName: customTableName,
             },
           },
         ],

@@ -7,7 +7,6 @@ import { AnyObject, TableConfig, Key } from '../types';
 export interface TransactPutItem {
   Put: {
     Item: AnyObject;
-    TableName?: string;
     ConditionExpression?: string;
     ExpressionAttributeNames?: Record<string, string>;
     ExpressionAttributeValues?: Record<string, unknown>;
@@ -17,7 +16,6 @@ export interface TransactPutItem {
 export interface TransactDeleteItem {
   Delete: {
     Key: Key;
-    TableName?: string;
     ConditionExpression?: string;
     ExpressionAttributeNames?: Record<string, string>;
     ExpressionAttributeValues?: Record<string, unknown>;
@@ -27,7 +25,6 @@ export interface TransactDeleteItem {
 export interface TransactUpdateItem {
   Update: {
     Key: Key;
-    TableName?: string;
     UpdateExpression: string;
     ConditionExpression?: string;
     ExpressionAttributeNames?: Record<string, string>;
@@ -38,7 +35,6 @@ export interface TransactUpdateItem {
 export interface TransactConditionCheckItem {
   ConditionCheck: {
     Key: Key;
-    TableName: string;
     ConditionExpression: string;
     ExpressionAttributeNames?: Record<string, string>;
     ExpressionAttributeValues?: Record<string, unknown>;
@@ -61,13 +57,13 @@ export function transactWriteItems(
   table: TableConfig,
   transactItems: Array<TransactWriteItem>,
 ): Promise<TransactWriteCommandOutput> {
-  // Add TableName to each item if not provided
+  // Add TableName from config to each item
   const itemsWithTableName = transactItems.map(item => {
     if ('Put' in item) {
       return {
         Put: {
           ...item.Put,
-          TableName: item.Put.TableName || table.name,
+          TableName: table.name,
         },
       };
     }
@@ -75,7 +71,7 @@ export function transactWriteItems(
       return {
         Delete: {
           ...item.Delete,
-          TableName: item.Delete.TableName || table.name,
+          TableName: table.name,
         },
       };
     }
@@ -83,7 +79,15 @@ export function transactWriteItems(
       return {
         Update: {
           ...item.Update,
-          TableName: item.Update.TableName || table.name,
+          TableName: table.name,
+        },
+      };
+    }
+    if ('ConditionCheck' in item) {
+      return {
+        ConditionCheck: {
+          ...item.ConditionCheck,
+          TableName: table.name,
         },
       };
     }
