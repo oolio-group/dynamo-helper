@@ -25,6 +25,9 @@
     "Shidil Eringa <shidil@live.com>",
     "Snehit Velma <snehithvelma@gmail.com>"
   ],
+  "engines": {
+    "node": ">=18.0.0"
+  },
   "scripts": {
     "build": "yarn  clean && yarn  compile",
     "build:watch": "yarn compile -- -w",
