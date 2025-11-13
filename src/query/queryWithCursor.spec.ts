@@ -14,7 +14,8 @@ describe('queryWithCursor', () => {
   });
 
   afterEach(() => {
-    mockQuery.mockReset();
+    mockQuery.mockRestore();
+    jest.clearAllMocks();
   });
 
   it('should throw an error when sort key is not defined on table', async () => {
@@ -155,7 +156,7 @@ const generateItems = () =>
 const ITEMS = generateItems();
 
 class DynamoDBPaginateQueryMockImpl {
-  private _records = ITEMS;
+  private _records = [...ITEMS]; // Create a copy instead of referencing the shared array
   private _processed = 0;
   private _lastEvaluatedKey;
 
@@ -278,7 +279,8 @@ describe('Pagination', () => {
   });
 
   afterEach(() => {
-    mockQuery.mockReset();
+    mockQuery.mockRestore();
+    jest.clearAllMocks();
   });
 
   test('with default page size (all items) and sort order', async () => {
