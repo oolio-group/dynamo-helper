@@ -99,8 +99,9 @@ export class DynamoHelper {
 
   async putItem<T extends AnyObject>(
     item: T,
+    conditions?: ConditionExpressionInput[],
   ): Promise<PutCommandOutput> {
-    return putItem(this.dbClient, this.table, item);
+    return putItem(this.dbClient, this.table, item, conditions);
   }
 
   async batchPutItems(

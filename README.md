@@ -283,6 +283,72 @@ await dynamoHelper.putItem({
 });
 ```
 
+#### Conditional Put
+
+Supports conditional put operations using [Conditional writes](https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/WorkingWithItems.html#WorkingWithItems.ConditionalUpdate). This is useful to prevent overwriting existing items.
+
+```typescript
+import {
+  putItem,
+  ConditionExpressionInput,
+  ConditionExpressionKind,
+} from '@oolio-group/dynamo-helper';
+
+// Prevent overwriting an existing item - only put if partition key doesn't exist
+const conditions: ConditionExpressionInput[] = [
+  {
+    kind: ConditionExpressionKind.Comparison,
+    key: 'pk',
+    comparator: 'exists',
+    value: false,
+  },
+];
+
+await dynamoHelper.putItem(
+  {
+    pk: 'product_123',
+    sk: 'product_123',
+    name: 'New Product',
+  },
+  conditions
+);
+```
+
+You can also use multiple conditions with AND/OR logic:
+
+```typescript
+// Put item only if it doesn't exist OR if status is inactive
+const conditions: ConditionExpressionInput[] = [
+  {
+    kind: ConditionExpressionKind.Comparison,
+    key: 'pk',
+    comparator: 'exists',
+    value: false,
+  },
+  {
+    kind: ConditionExpressionKind.AndOr,
+    value: 'OR',
+  },
+  {
+    kind: ConditionExpressionKind.Comparison,
+    key: 'status',
+    comparator: 'eq',
+    value: 'inactive',
+  },
+];
+
+await dynamoHelper.putItem(
+  {
+    pk: 'product_123',
+    sk: 'product_123',
+    name: 'Updated Product',
+    status: 'active',
+  },
+  conditions
+);
+```
+
+
 ### deleteItem
 
 Remove an item from database matching the key provided if it exists
