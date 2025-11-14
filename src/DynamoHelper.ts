@@ -50,30 +50,34 @@ export class DynamoHelper {
   async query<T extends AnyObject>(
     filter: Filter<T>,
     indexName?: string,
+    consistentRead?: boolean,
   ): Promise<Array<T>> {
-    return query(this.dbClient, this.table, filter, indexName);
+    return query(this.dbClient, this.table, filter, indexName, consistentRead);
   }
 
   async queryWithCursor<T extends AnyObject>(
     filter: Filter<T>,
     indexName?: string,
+    consistentRead?: boolean,
   ): Promise<{ items: Array<T>; cursor?: string; scannedCount: number }> {
-    return queryWithCursor(this.dbClient, this.table, filter, indexName);
+    return queryWithCursor(this.dbClient, this.table, filter, indexName, consistentRead);
   }
 
   async getItem<T extends AnyObject>(
     key: Key,
     fields?: Array<keyof T>,
+    consistentRead?: boolean,
   ): Promise<T> {
-    return getItem(this.dbClient, this.table, key, fields);
+    return getItem(this.dbClient, this.table, key, fields, consistentRead);
   }
 
   async batchGetItems(
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     keys: Array<{ [name: string]: any }>,
     fields?: Array<string>,
+    consistentRead?: boolean,
   ): Promise<Array<AnyObject>> {
-    return batchGetItems(this.dbClient, this.table, keys, fields);
+    return batchGetItems(this.dbClient, this.table, keys, fields, consistentRead);
   }
 
   async exists(key: Key): Promise<boolean> {

@@ -71,4 +71,53 @@ describe('getItem', () => {
       }
     }));
   });
+
+  test('consistent read set to true', async () => {
+    spy.mockResolvedValue({ Item: { id: 'xxxx' } });
+
+    await getItem({ pk: 'xxxx', sk: 'yyyy' }, undefined, true);
+    expect(testClient.send).toHaveBeenCalledWith(expect.objectContaining({
+      input: {
+        TableName: testTableConf.name,
+        Key: {
+          pk: 'xxxx',
+          sk: 'yyyy',
+        },
+        ConsistentRead: true,
+      }
+    }));
+  });
+
+  test('consistent read set to false', async () => {
+    spy.mockResolvedValue({ Item: { id: 'xxxx' } });
+
+    await getItem({ pk: 'xxxx', sk: 'yyyy' }, undefined, false);
+    expect(testClient.send).toHaveBeenCalledWith(expect.objectContaining({
+      input: {
+        TableName: testTableConf.name,
+        Key: {
+          pk: 'xxxx',
+          sk: 'yyyy',
+        },
+        ConsistentRead: false,
+      }
+    }));
+  });
+
+  test('consistent read not specified', async () => {
+    spy.mockResolvedValue({ Item: { id: 'xxxx' } });
+
+    await getItem({ pk: 'xxxx', sk: 'yyyy' }, undefined, undefined);
+    expect(testClient.send).toHaveBeenCalledWith(expect.objectContaining({
+      input: {
+        TableName: testTableConf.name,
+        Key: {
+          pk: 'xxxx',
+          sk: 'yyyy',
+        },
+      }
+    }));
+    // Ensure ConsistentRead is not present in the params
+    expect((testClient.send as jest.Mock).mock.calls[0][0].input.ConsistentRead).toBeUndefined();
+  });
 });

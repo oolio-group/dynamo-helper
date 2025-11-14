@@ -163,6 +163,28 @@ const products = await dynamoHelper.query<ProductModel>({
 });
 ```
 
+#### Consistent Read
+
+By default, DynamoDB uses eventually consistent reads. To use strongly consistent reads, pass `true` as the third parameter to the query method:
+
+```typescript
+// Perform a strongly consistent read
+const products = await dynamoHelper.query<ProductModel>(
+  {
+    where: {
+      pk: 'org_uuid',
+      sk: {
+        beginsWith: 'product_',
+      },
+    },
+  },
+  undefined,  // indexName
+  true        // consistentRead
+);
+```
+
+**Note:** Consistent reads are only supported on the base table and local secondary indexes, not on global secondary indexes. Consistent reads consume twice the read capacity units compared to eventually consistent reads.
+
 ### pginated based query (cursor)
 
 - DynamoDB official docs - [Paginate table query result](https://docs.amazonaws.cn/en_us/amazondynamodb/latest/developerguide/Query.Pagination.html) and [Query](https://docs.aws.amazon.com/amazondynamodb/latest/APIReference/API_Query.html)
@@ -242,6 +264,21 @@ await dynamoHelper.getItem<ProductModel>({ id: 'product_xxx' }, [
 ]);
 ```
 
+#### Consistent Read
+
+To use strongly consistent reads with `getItem`, pass `true` as the third parameter:
+
+```typescript
+// Get item with strongly consistent read
+const product = await dynamoHelper.getItem<ProductModel>(
+  { pk: 'org_uuid', sk: 'product_xxx' },
+  ['id', 'name', 'price'],
+  true  // consistentRead
+);
+```
+
+**Note:** Consistent reads consume twice the read capacity units compared to eventually consistent reads.
+
 ### batchGetItems
 
 Fetch many items using pk and sk combination
@@ -255,6 +292,24 @@ const products = await dynamoHelper.batchGetItems<ProductModel>([
   { pk: 'y', sk: '2' },
 ]);
 ```
+
+#### Consistent Read
+
+To use strongly consistent reads with `batchGetItems`, pass `true` as the third parameter:
+
+```typescript
+// Batch get items with strongly consistent read
+const products = await dynamoHelper.batchGetItems<ProductModel>(
+  [
+    { pk: 'org_uuid', sk: 'product_1' },
+    { pk: 'org_uuid', sk: 'product_2' },
+  ],
+  ['id', 'name', 'price'],  // fields to project
+  true  // consistentRead
+);
+```
+
+**Note:** Consistent reads consume twice the read capacity units compared to eventually consistent reads.
 
 ### exists
 

@@ -5,6 +5,8 @@ import { buildQueryTableParams } from './queryBuilder';
 /**
  * Queries DynamoDB and returns list of matching items
  * @param {Filter<T>} filter query filter
+ * @param {string} indexName optional index name
+ * @param {boolean} consistentRead optional consistent read flag
  * @returns {Array<T>} list of matching items
  */
 export async function query<T extends AnyObject>(
@@ -12,6 +14,7 @@ export async function query<T extends AnyObject>(
   table: TableConfig,
   filter: Filter<T>,
   indexName?: string,
+  consistentRead?: boolean,
 ): Promise<Array<T>> {
   const { partitionKeyName, sortKeyName } = table.indexes[
     indexName || 'default'
@@ -22,6 +25,10 @@ export async function query<T extends AnyObject>(
 
   if (indexName) {
     params.IndexName = indexName;
+  }
+
+  if (consistentRead !== undefined) {
+    params.ConsistentRead = consistentRead;
   }
 
   let lastEvaluatedKey;
