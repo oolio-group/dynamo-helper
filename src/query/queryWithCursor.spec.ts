@@ -156,9 +156,20 @@ const generateItems = () =>
 const ITEMS = generateItems();
 
 class DynamoDBPaginateQueryMockImpl {
-  private _records = [...ITEMS]; // Create a copy instead of referencing the shared array
+  private _records: Item[] = [];
   private _processed = 0;
   private _lastEvaluatedKey;
+
+  constructor() {
+    this.reset();
+  }
+
+  reset() {
+    // Use slice to create a shallow copy only when needed
+    this._records = ITEMS.slice();
+    this._processed = 0;
+    this._lastEvaluatedKey = undefined;
+  }
 
   set processed(value: number) {
     this._processed = value;
@@ -257,14 +268,15 @@ describe('Pagination', () => {
     ...testTableConf,
     cursorSecret: 'secret',
   });
+  const mockDB = new DynamoDBPaginateQueryMockImpl();
 
   beforeEach(() => {
     mockQuery = jest
       .spyOn(testClient, 'send')
       .mockImplementation((command: any) => {
         const params = command.input;
-        const dynamodDB = new DynamoDBPaginateQueryMockImpl();
-        const items = dynamodDB
+        mockDB.reset(); // Reset state instead of creating new instance
+        const items = mockDB
           .partition(params)
           .sort(params)
           .pick(params, params.Limit)
@@ -272,7 +284,7 @@ describe('Pagination', () => {
 
         return Promise.resolve({
           Items: items as any[],
-          LastEvaluatedKey: dynamodDB.lastEvaluatedKey,
+          LastEvaluatedKey: mockDB.lastEvaluatedKey,
           ScannedCount: TOTAL_RECORDS,
         });
       });
@@ -461,13 +473,15 @@ describe('Pagination', () => {
   });
 
   test('with different limit for subsequent query if first result does not fulfill the limit', async () => {
+    const mockDB1 = new DynamoDBPaginateQueryMockImpl();
+    const mockDB2 = new DynamoDBPaginateQueryMockImpl();
+
     mockQuery = jest
       .spyOn(testClient, 'send')
       .mockImplementationOnce((command: any) => {
         // first call return limit - 2 result
         const params = command.input;
-        const dynamodDB = new DynamoDBPaginateQueryMockImpl();
-        const items = dynamodDB
+        const items = mockDB1
           .partition(params)
           .sort(params)
           .pick(params, params.Limit - 2)
@@ -475,15 +489,14 @@ describe('Pagination', () => {
 
         return Promise.resolve({
           Items: items as any[],
-          LastEvaluatedKey: dynamodDB.lastEvaluatedKey,
+          LastEvaluatedKey: mockDB1.lastEvaluatedKey,
           ScannedCount: TOTAL_RECORDS,
         });
       })
       .mockImplementationOnce((command: any) => {
         // second call should return what is left
         const params = command.input;
-        const dynamodDB = new DynamoDBPaginateQueryMockImpl();
-        const items = dynamodDB
+        const items = mockDB2
           .partition(params)
           .sort(params)
           .pick(params, params.Limit)
@@ -491,7 +504,7 @@ describe('Pagination', () => {
 
         return Promise.resolve({
           Items: items as any[],
-          LastEvaluatedKey: dynamodDB.lastEvaluatedKey,
+          LastEvaluatedKey: mockDB2.lastEvaluatedKey,
           ScannedCount: TOTAL_RECORDS,
         });
       });
