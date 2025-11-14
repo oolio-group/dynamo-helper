@@ -73,8 +73,9 @@ export class DynamoHelper {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     keys: Array<{ [name: string]: any }>,
     fields?: Array<string>,
+    consistentRead?: boolean,
   ): Promise<Array<AnyObject>> {
-    return batchGetItems(this.dbClient, this.table, keys, fields);
+    return batchGetItems(this.dbClient, this.table, keys, fields, consistentRead);
   }
 
   async exists(key: Key): Promise<boolean> {

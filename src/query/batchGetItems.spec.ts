@@ -167,4 +167,47 @@ describe('batchGetItems', () => {
       { pk: '5', sk: '6', id: 'c' },
     ]);
   });
+
+  test('consistent read set to true', async () => {
+    await batchGetItems([{ pk: 'xxxx', sk: 'yyyy' }], undefined, true);
+    expect(spy).toHaveBeenCalledWith(expect.objectContaining({
+      input: {
+        RequestItems: {
+          [testTableConf.name]: {
+            Keys: [{ pk: 'xxxx', sk: 'yyyy' }],
+            ConsistentRead: true,
+          },
+        },
+      }
+    }));
+  });
+
+  test('consistent read set to false', async () => {
+    await batchGetItems([{ pk: 'xxxx', sk: 'yyyy' }], undefined, false);
+    expect(spy).toHaveBeenCalledWith(expect.objectContaining({
+      input: {
+        RequestItems: {
+          [testTableConf.name]: {
+            Keys: [{ pk: 'xxxx', sk: 'yyyy' }],
+            ConsistentRead: false,
+          },
+        },
+      }
+    }));
+  });
+
+  test('consistent read not specified', async () => {
+    await batchGetItems([{ pk: 'xxxx', sk: 'yyyy' }], undefined, undefined);
+    expect(spy).toHaveBeenCalledWith(expect.objectContaining({
+      input: {
+        RequestItems: {
+          [testTableConf.name]: {
+            Keys: [{ pk: 'xxxx', sk: 'yyyy' }],
+          },
+        },
+      }
+    }));
+    // Ensure ConsistentRead is not present in the params
+    expect((spy.mock.calls[0][0] as any).input.RequestItems[testTableConf.name].ConsistentRead).toBeUndefined();
+  });
 });

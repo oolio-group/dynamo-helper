@@ -7,6 +7,8 @@ import { AnyObject, TableConfig, Key } from '../types';
 /**
  * Get many items from the db matching the provided keys
  * @param keys array of key maps. eg: [{ pk: '1', sk: '2'}]
+ * @param fields optional fields to project
+ * @param consistentRead optional consistent read flag
  * @returns list of items
  */
 export async function batchGetItems(
@@ -14,6 +16,7 @@ export async function batchGetItems(
   table: TableConfig,
   keys: Array<Key>,
   fields?: Array<string>,
+  consistentRead?: boolean,
 ): Promise<Array<AnyObject>> {
   let result: BatchGetCommandOutput;
   let unProcessedKeys = [];
@@ -22,7 +25,7 @@ export async function batchGetItems(
   // https://docs.aws.amazon.com/amazondynamodb/latest/APIReference/API_BatchGetItem.html
   if (keys.length > 100) {
     const results = await Promise.all(
-      chunk(keys, 100).map(x => batchGetItems(dbClient, table, x)),
+      chunk(keys, 100).map(x => batchGetItems(dbClient, table, x, fields, consistentRead)),
     );
     return flatten(results);
   }
@@ -51,6 +54,7 @@ export async function batchGetItems(
           ProjectionExpression: fieldsToProject
             ? fieldsToProject.join(',')
             : undefined,
+          ...(consistentRead !== undefined && { ConsistentRead: consistentRead }),
         },
       },
     }));

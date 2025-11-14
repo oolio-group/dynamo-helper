@@ -290,6 +290,24 @@ const products = await dynamoHelper.batchGetItems<ProductModel>([
 ]);
 ```
 
+#### Consistent Read
+
+To use strongly consistent reads with `batchGetItems`, pass `true` as the third parameter:
+
+```typescript
+// Batch get items with strongly consistent read
+const products = await dynamoHelper.batchGetItems<ProductModel>(
+  [
+    { pk: 'org_uuid', sk: 'product_1' },
+    { pk: 'org_uuid', sk: 'product_2' },
+  ],
+  ['id', 'name', 'price'],  // fields to project
+  true  // consistentRead
+);
+```
+
+**Note:** Consistent reads consume twice the read capacity units compared to eventually consistent reads.
+
 ### exists
 
 Check if an item exists in the database with the keys provided. Returns a boolean value
