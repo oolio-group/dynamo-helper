@@ -24,6 +24,10 @@ export async function query<T extends AnyObject>(
     params.IndexName = indexName;
   }
 
+  if (filter.consistentRead !== undefined) {
+    params.ConsistentRead = filter.consistentRead;
+  }
+
   let lastEvaluatedKey;
   let items: T[] = [];
 

@@ -13,6 +13,7 @@ export async function getItem<T extends AnyObject>(
   table: TableConfig,
   key: Key,
   fields?: Array<keyof T>,
+  consistentRead?: boolean,
 ): Promise<T> {
   const index = table.indexes.default;
 
@@ -33,6 +34,10 @@ export async function getItem<T extends AnyObject>(
 
   if (fields && fields.length) {
     params.ProjectionExpression = fields.join(',');
+  }
+
+  if (consistentRead !== undefined) {
+    params.ConsistentRead = consistentRead;
   }
 
   const result = await dbClient.send(new GetCommand(params));

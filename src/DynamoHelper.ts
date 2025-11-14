@@ -64,8 +64,9 @@ export class DynamoHelper {
   async getItem<T extends AnyObject>(
     key: Key,
     fields?: Array<keyof T>,
+    consistentRead?: boolean,
   ): Promise<T> {
-    return getItem(this.dbClient, this.table, key, fields);
+    return getItem(this.dbClient, this.table, key, fields, consistentRead);
   }
 
   async batchGetItems(

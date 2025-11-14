@@ -523,4 +523,58 @@ describe('Pagination', () => {
     const calledParams = (mockQuery.mock.calls[0][0] as any).input;
     expect(calledParams).not.toHaveProperty('IndexName');
   });
+
+  test('consistent read set to true', async () => {
+    mockQuery = jest.spyOn(testClient, 'send').mockResolvedValue({ Items: [], LastEvaluatedKey: undefined });
+
+    await query({
+      where: {
+        pk: 'xxxx',
+      },
+      consistentRead: true,
+    });
+
+    expect(testClient.send).toHaveBeenCalledWith(expect.objectContaining({
+      input: expect.objectContaining({
+        TableName: testTableConf.name,
+        ConsistentRead: true,
+      })
+    }));
+  });
+
+  test('consistent read set to false', async () => {
+    mockQuery = jest.spyOn(testClient, 'send').mockResolvedValue({ Items: [], LastEvaluatedKey: undefined });
+
+    await query({
+      where: {
+        pk: 'xxxx',
+      },
+      consistentRead: false,
+    });
+
+    expect(testClient.send).toHaveBeenCalledWith(expect.objectContaining({
+      input: expect.objectContaining({
+        TableName: testTableConf.name,
+        ConsistentRead: false,
+      })
+    }));
+  });
+
+  test('consistent read not specified', async () => {
+    mockQuery = jest.spyOn(testClient, 'send').mockResolvedValue({ Items: [], LastEvaluatedKey: undefined });
+
+    await query({
+      where: {
+        pk: 'xxxx',
+      },
+    });
+
+    expect(testClient.send).toHaveBeenCalledWith(expect.objectContaining({
+      input: expect.objectContaining({
+        TableName: testTableConf.name,
+      })
+    }));
+    // Ensure ConsistentRead is not present in the params
+    expect((testClient.send as jest.Mock).mock.calls[0][0].input.ConsistentRead).toBeUndefined();
+  });
 });

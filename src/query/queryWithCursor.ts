@@ -47,6 +47,10 @@ export async function queryWithCursor<T extends AnyObject>(
     table.cursorSecret,
   );
 
+  if (filter.consistentRead !== undefined) {
+    params.ConsistentRead = filter.consistentRead;
+  }
+
   const originalLimit = params.Limit;
   let items = [];
   let totalScannedCount = 0;
