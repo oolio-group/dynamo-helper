@@ -177,11 +177,6 @@ export interface Filter<MT extends object = AnyObject> {
    * Only be used with cursor based `query`
    */
   prevCursor?: string;
-
-  /**
-   * Determines the read consistency model. If set to true, then the operation uses strongly consistent reads; otherwise, the operation uses eventually consistent reads.
-   */
-  consistentRead?: boolean;
 }
 
 type TableIndex = { partitionKeyName: string; sortKeyName?: string };

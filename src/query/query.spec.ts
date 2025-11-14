@@ -98,8 +98,7 @@ describe('query', () => {
       where: {
         pk: 'xxxx',
       },
-      consistentRead: true,
-    });
+    }, undefined, true);
 
     expect(testClient.send).toHaveBeenCalledWith(expect.objectContaining({
       input: expect.objectContaining({
@@ -116,8 +115,7 @@ describe('query', () => {
       where: {
         pk: 'xxxx',
       },
-      consistentRead: false,
-    });
+    }, undefined, false);
 
     expect(testClient.send).toHaveBeenCalledWith(expect.objectContaining({
       input: expect.objectContaining({
@@ -134,7 +132,7 @@ describe('query', () => {
       where: {
         pk: 'xxxx',
       },
-    });
+    }, undefined, undefined);
 
     expect(testClient.send).toHaveBeenCalledWith(expect.objectContaining({
       input: expect.objectContaining({

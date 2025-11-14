@@ -50,15 +50,17 @@ export class DynamoHelper {
   async query<T extends AnyObject>(
     filter: Filter<T>,
     indexName?: string,
+    consistentRead?: boolean,
   ): Promise<Array<T>> {
-    return query(this.dbClient, this.table, filter, indexName);
+    return query(this.dbClient, this.table, filter, indexName, consistentRead);
   }
 
   async queryWithCursor<T extends AnyObject>(
     filter: Filter<T>,
     indexName?: string,
+    consistentRead?: boolean,
   ): Promise<{ items: Array<T>; cursor?: string; scannedCount: number }> {
-    return queryWithCursor(this.dbClient, this.table, filter, indexName);
+    return queryWithCursor(this.dbClient, this.table, filter, indexName, consistentRead);
   }
 
   async getItem<T extends AnyObject>(

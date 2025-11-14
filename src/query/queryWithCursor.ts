@@ -9,7 +9,8 @@ const DEFAULT_LIMIT = 99999;
  * Cursor based query which returns list of matching items and the last cursor position
  *
  * @param {Filter<T>} filter query filter
- * @param { QueryWithCursorOptions } options cursor, page size options
+ * @param {string} indexName optional index name
+ * @param {boolean} consistentRead optional consistent read flag
  * @returns {Array<T>, string} list of matching items, last cursor position
  */
 export async function queryWithCursor<T extends AnyObject>(
@@ -17,6 +18,7 @@ export async function queryWithCursor<T extends AnyObject>(
   table: TableConfig,
   filter: Filter<T>,
   indexName?: string,
+  consistentRead?: boolean,
 ): Promise<{ items: Array<T>; cursor?: string; scannedCount: number }> {
   const { partitionKeyName, sortKeyName } = table.indexes[
     indexName || 'default'
@@ -47,8 +49,8 @@ export async function queryWithCursor<T extends AnyObject>(
     table.cursorSecret,
   );
 
-  if (filter.consistentRead !== undefined) {
-    params.ConsistentRead = filter.consistentRead;
+  if (consistentRead !== undefined) {
+    params.ConsistentRead = consistentRead;
   }
 
   const originalLimit = params.Limit;

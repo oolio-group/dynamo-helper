@@ -165,19 +165,22 @@ const products = await dynamoHelper.query<ProductModel>({
 
 #### Consistent Read
 
-By default, DynamoDB uses eventually consistent reads. To use strongly consistent reads, set `consistentRead` to `true` in your query filter:
+By default, DynamoDB uses eventually consistent reads. To use strongly consistent reads, pass `true` as the third parameter to the query method:
 
 ```typescript
 // Perform a strongly consistent read
-const products = await dynamoHelper.query<ProductModel>({
-  where: {
-    pk: 'org_uuid',
-    sk: {
-      beginsWith: 'product_',
+const products = await dynamoHelper.query<ProductModel>(
+  {
+    where: {
+      pk: 'org_uuid',
+      sk: {
+        beginsWith: 'product_',
+      },
     },
   },
-  consistentRead: true,
-});
+  undefined,  // indexName
+  true        // consistentRead
+);
 ```
 
 **Note:** Consistent reads are only supported on the base table and local secondary indexes, not on global secondary indexes. Consistent reads consume twice the read capacity units compared to eventually consistent reads.
