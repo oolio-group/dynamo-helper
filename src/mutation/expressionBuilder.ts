@@ -34,6 +34,14 @@ export const buildConditionExpressions = (
         expression += `${expressionName} ${operator} :val${i}_1 AND :val${i}_2`;
         attrValues[`:val${i}_1`] = value[0];
         attrValues[`:val${i}_2`] = value[1];
+      } else if (operator === 'EXISTS') {
+        // For EXISTS, we don't need a value, just check if attribute exists or not
+        const existsValue = value as boolean;
+        if (existsValue) {
+          expression += `attribute_exists(${expressionName})`;
+        } else {
+          expression += `attribute_not_exists(${expressionName})`;
+        }
       } else {
         expression += `${expressionName} ${operator} :val${i}`;
         attrValues[`:val${i}`] = value;
