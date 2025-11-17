@@ -138,9 +138,9 @@ describe('transactWriteItems', () => {
             ConditionCheck: {
               Key: { pk: '1', sk: 'a' },
               TableName: testTableConf.name,
-              ConditionExpression: '#key_pk EXISTS :val0',
+              ConditionExpression: 'attribute_exists(#key_pk)',
               ExpressionAttributeNames: { '#key_pk': 'pk' },
-              ExpressionAttributeValues: { ':val0': true },
+              ExpressionAttributeValues: {},
             },
           },
         ],
@@ -214,9 +214,8 @@ describe('transactWriteItems', () => {
           {
             Put: {
               Item: { pk: '1', sk: 'a', name: 'Alice' },
-              ConditionExpression: '#key_pk EXISTS :val0',
+              ConditionExpression: 'attribute_not_exists(#key_pk)',
               ExpressionAttributeNames: { '#key_pk': 'pk' },
-              ExpressionAttributeValues: { ':val0': false },
               TableName: testTableConf.name,
             },
           },
@@ -250,9 +249,9 @@ describe('transactWriteItems', () => {
           {
             Delete: {
               Key: { pk: '1', sk: 'a' },
-              ConditionExpression: '#key_pk EXISTS :val0',
+              ConditionExpression: 'attribute_exists(#key_pk)',
               ExpressionAttributeNames: { '#key_pk': 'pk' },
-              ExpressionAttributeValues: { ':val0': true },
+              ExpressionAttributeValues: {},
               TableName: testTableConf.name,
             },
           },

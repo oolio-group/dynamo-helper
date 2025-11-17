@@ -1,51 +1,8 @@
-import { AnyObject, TableConfig, ConditionExpressionInput, ConditionExpressionKind } from '../types';
+import { AnyObject, TableConfig, ConditionExpressionInput } from '../types';
 import { DynamoDBDocumentClient, PutCommand, PutCommandOutput, PutCommandInput } from '@aws-sdk/lib-dynamodb';
-import { keyOperatorLookup } from '../query/queryBuilder';
+import { buildConditionExpressions } from './expressionBuilder';
 
-const buildConditionExpressions = (
-  conditionExpression: ConditionExpressionInput[],
-): { expression: string; attrValues: Record<string, unknown>; attrNames: Record<string, string> } => {
-  let expression = '';
-  const attrValues: Record<string, unknown> = {};
-  const attrNames: Record<string, string> = {};
-  for (let i = 0; i < conditionExpression.length; i++) {
-    const currentExpression = conditionExpression[i];
-    if (currentExpression.kind === ConditionExpressionKind.AndOr) {
-      if (i > 0) {
-        expression += ` ${currentExpression.value} `;
-      }
-      continue;
-    }
-    if (currentExpression.kind === ConditionExpressionKind.Comparison) {
-      const key = currentExpression.key;
-      const comparator = currentExpression.comparator;
-      const value = currentExpression.value;
 
-      if (!comparator) continue;
-      const operator = keyOperatorLookup(comparator);
-      const expressionName = `#key_${key}`;
-      attrNames[expressionName] = key;
-
-      if (operator === 'BETWEEN') {
-        expression += `${expressionName} ${operator} :val${i}_1 AND :val${i}_2`;
-        attrValues[`:val${i}_1`] = value[0];
-        attrValues[`:val${i}_2`] = value[1];
-      } else if (operator === 'EXISTS') {
-        // For EXISTS, we don't need a value, just check if attribute exists or not
-        const existsValue = value as boolean;
-        if (existsValue) {
-          expression += `attribute_exists(${expressionName})`;
-        } else {
-          expression += `attribute_not_exists(${expressionName})`;
-        }
-      } else {
-        expression += `${expressionName} ${operator} :val${i}`;
-        attrValues[`:val${i}`] = value;
-      }
-    }
-  }
-  return { expression, attrValues, attrNames };
-};
 
 /**
  * Writes item in database.

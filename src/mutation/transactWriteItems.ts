@@ -62,9 +62,10 @@ export function transactWriteItems(
         const conditionExpr = buildConditionExpressions(item.Put.conditions);
         putItem.ConditionExpression = conditionExpr.expression;
         putItem.ExpressionAttributeNames = conditionExpr.attrNames;
-        putItem.ExpressionAttributeValues = conditionExpr.attrValues;
+        if (Object.keys(conditionExpr.attrValues).length > 0) {
+          putItem.ExpressionAttributeValues = conditionExpr.attrValues;
+        }
       }
-
       return { Put: putItem };
     }
 
