@@ -62,9 +62,12 @@ export const buildUpdateExpressions = (item: object): ConditionExpressionReturn 
   const expressionNames = {};
 
   Object.keys(item)?.forEach(key => {
-    expressions.push(`#key_${key} = :val_${key}`);
-    expressionNames[`#key_${key}`] = key;
-    expressionValues[`:val_${key}`] = item[key];
+    // Skip undefined values to remove them from update expression
+    if (item[key] !== undefined) {
+      expressions.push(`#key_${key} = :val_${key}`);
+      expressionNames[`#key_${key}`] = key;
+      expressionValues[`:val_${key}`] = item[key];
+    }
   });
 
   return {
