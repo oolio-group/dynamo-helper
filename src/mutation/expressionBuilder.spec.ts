@@ -133,5 +133,30 @@ describe('expressionBuilder', () => {
       expect(result.attrNames).toEqual({});
       expect(result.attrValues).toEqual({});
     });
+
+    it('should remove undefined values from update expression', () => {
+      const result = buildUpdateExpressions({
+        name: 'John',
+        age: 30,
+        undefinedField: undefined,
+        status: 'active',
+      });
+
+      expect(result.expression).toContain('SET ');
+      expect(result.expression).toContain('#key_name = :val_name');
+      expect(result.expression).toContain('#key_age = :val_age');
+      expect(result.expression).toContain('#key_status = :val_status');
+      expect(result.expression).not.toContain('undefinedField');
+      expect(result.attrNames).toEqual({
+        '#key_name': 'name',
+        '#key_age': 'age',
+        '#key_status': 'status',
+      });
+      expect(result.attrValues).toEqual({
+        ':val_name': 'John',
+        ':val_age': 30,
+        ':val_status': 'active',
+      });
+    });
   });
 });

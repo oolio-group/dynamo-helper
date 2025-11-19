@@ -43,7 +43,11 @@ export class DynamoHelper {
       region,
       endpoint,
     });
-    this.dbClient = DynamoDBDocumentClient.from(client);
+    this.dbClient = DynamoDBDocumentClient.from(client, {
+      marshallOptions: {
+        removeUndefinedValues: true,
+      },
+    });
     this.table = table;
   }
 
