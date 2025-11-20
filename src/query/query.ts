@@ -31,20 +31,34 @@ export async function query<T extends AnyObject>(
     params.ConsistentRead = consistentRead;
   }
 
+  const originalLimit = params.Limit;
   let lastEvaluatedKey;
   let items: T[] = [];
 
   do {
+    // Create a copy of params for this iteration to avoid mutation issues
+    const requestParams = { ...params };
+
     if (lastEvaluatedKey) {
-      params.ExclusiveStartKey = lastEvaluatedKey;
+      requestParams.ExclusiveStartKey = lastEvaluatedKey;
     }
 
-    const result = await dbClient.send(new QueryCommand(params));
+    // Adjust limit for subsequent requests if original limit is set
+    if (originalLimit && items.length > 0) {
+      requestParams.Limit = originalLimit - items.length;
+    }
+
+    const result = await dbClient.send(new QueryCommand(requestParams));
 
     items = items.concat(result.Items as T[]);
 
     lastEvaluatedKey = result.LastEvaluatedKey;
-  } while (lastEvaluatedKey);
+  } while (lastEvaluatedKey && !(originalLimit && items.length >= originalLimit));
+
+  // Ensure we don't return more items than the original limit
+  if (originalLimit && items.length > originalLimit) {
+    return items.slice(0, originalLimit);
+  }
 
   return items;
 }
