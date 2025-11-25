@@ -251,8 +251,20 @@ export function buildQueryTableParams<T extends object = AnyObject>(
   // Add projection attribute expressions
   // if at least one field is provided filter is applied
   if (filter.fields && filter.fields.length > 0) {
+
     const fields = [...filter.fields, partitionKeyName, sortKeyName];
-    tableParams.ProjectionExpression = fields.join(',');
+
+    const expressionAttributeNames = tableParams.ExpressionAttributeNames || {};
+
+    // use aliases for fields to avoid reserved keywords
+    const projectionFieldAliases = fields.map(f => {
+      const alias = `#${f.toString().toUpperCase()}`;
+      expressionAttributeNames[alias] = f;
+      return alias;
+    });
+
+    tableParams.ExpressionAttributeNames = expressionAttributeNames;
+    tableParams.ProjectionExpression = projectionFieldAliases.join(',');
   }
 
   // Apply limit parameter. If set result will only contain X number of items
