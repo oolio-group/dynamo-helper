@@ -1,5 +1,6 @@
 name: npm-publish
 on:
+  workflow_dispatch:
   push:
     tags:
       - 'v*.*.*'
@@ -15,6 +16,7 @@ jobs:
       with:
         node-version: 18
         registry-url: https://registry.npmjs.org/
+        scope: "@oolio-group"
     - name: Install Node Dependencies
       run: yarn install
     - name: Build packages
