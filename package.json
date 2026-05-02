@@ -60,6 +60,10 @@
     "pretty-quick": "3.1.0",
     "typescript": "~5.7.2"
   },
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org/"
+  },
   "husky": {
     "hooks": {
       "pre-commit": "yarn lint && pretty-quick --staged"
