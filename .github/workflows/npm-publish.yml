@@ -1,18 +1,32 @@
 name: npm-publish
 on:
   workflow_dispatch:
+  workflow_run:
+    workflows: ["Unit Tests and ESLint"]
+    types:
+      - completed
+    branches:
+      - master
   push:
     tags:
       - 'v*.*.*'
+
+permissions:
+  actions: write
+  contents: read
 
 jobs:
   npm-publish:
     name: npm-publish
     runs-on: ubuntu-latest
+    if: >
+      github.event_name == 'workflow_dispatch' ||
+      github.event_name == 'push' ||
+      (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success')
     steps:
     - name: Checkout repository
       uses: actions/checkout@v4
-    - uses: actions/setup-node@v3
+    - uses: actions/setup-node@v4
       with:
         node-version: 18
         registry-url: https://registry.npmjs.org/
@@ -23,14 +37,37 @@ jobs:
       run: yarn build
       env:
         CI: "TRUE"
+    - name: Verify npm authentication
+      run: |
+        echo "Verifying npm authentication..."
+        NPM_EXIT=0
+        NPM_USER=$(npm whoami --registry https://registry.npmjs.org/ 2>&1) || NPM_EXIT=$?
+        if [ "$NPM_EXIT" -ne 0 ]; then
+          echo "::error::npm authentication failed: ${NPM_USER}"
+          echo "::error::Ensure NPM_AUTH_TOKEN is set to a valid npm automation token with publish access to @oolio-group."
+          exit 1
+        fi
+        echo "Authenticated as: ${NPM_USER}"
+      env:
+        NODE_AUTH_TOKEN: ${{secrets.NPM_AUTH_TOKEN}}
     - name: Publish package
       run: |
         VERSION=$(node -p "require('./package.json').version")
         PACKAGE=$(node -p "require('./package.json').name")
-        if npm view "${PACKAGE}@${VERSION}" version 2>/dev/null | grep -q "${VERSION}"; then
+
+        # Check if this version is already published.
+        # npm view returns E404 (exit 1) when the version doesn't exist; treat any failure as "not found".
+        PUBLISHED_VERSION=$(npm view "${PACKAGE}@${VERSION}" version 2>/dev/null) || PUBLISHED_VERSION=""
+        if [ "$PUBLISHED_VERSION" = "${VERSION}" ]; then
           echo "Version ${VERSION} already published, skipping"
-        else
-          npm publish --access public
+          exit 0
+        fi
+
+        echo "Publishing ${PACKAGE}@${VERSION}..."
+        if ! npm publish --access public; then
+          echo "::error::npm publish failed. If the error is E404, the npm organization '@oolio-group' may not exist."
+          echo "::error::To fix: 1) Create the org at https://www.npmjs.com/org/create  2) Add the NPM_AUTH_TOKEN owner as a member with publish rights."
+          exit 1
         fi
       env:
         NODE_AUTH_TOKEN: ${{secrets.NPM_AUTH_TOKEN}}

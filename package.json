@@ -17,7 +17,7 @@
   "types": "lib",
   "repository": {
     "type": "git",
-    "url": "http://github.com/oolio-group/dynamo-helper.git"
+    "url": "https://github.com/oolio-group/dynamo-helper.git"
   },
   "bugs": "https://github.com/oolio-group/dynamo-helper/issues",
   "license": "MIT",
